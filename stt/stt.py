@@ -1,0 +1,102 @@
+import RealtimeSTT
+
+class STT:
+    def __init__(self):
+        self.recorder = None
+
+        try:
+            self.recorder = RealtimeSTT.AudioToTextRecorder(
+                model="tiny.en",
+                enable_realtime_transcription=False
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize RealtimeSTT recorder: {e}")
+            self.recorder = None
+
+    def normal_stt(self):
+        """
+        Blocking speech-to-text. Returns "" on any error instead of crashing.
+        """
+        if self.recorder is None:
+            print("[ERROR] STT recorder is not initialized.")
+            return ""
+
+        try:
+            text = self.recorder.text()  # Blocking call
+            return text if isinstance(text, str) else ""
+        except Exception as e:
+            print(f"[ERROR] STT normal_stt() failed: {e}")
+            return ""
+        
+    def stt_from_bytes(self, audio_bytes):
+        # Save bytes → temp wav
+        with open("temp.wav", "wb") as f:
+            f.write(audio_bytes)
+
+        return self.recorder.text_from_file("temp.wav")
+
+
+    def shutdown_stt(self):
+        """
+        Safely shut down the STT system.
+        """
+        if self.recorder is None:
+            return
+
+        try:
+            self.recorder.shutdown()
+        except Exception as e:
+            print(f"[WARN] Failed to shutdown STT recorder cleanly: {e}")
+    
+    def transcribe_for_api(self, audio_bytes):
+        # Save bytes → temp wav
+        with open("temp.wav", "wb") as f:
+            f.write(audio_bytes)
+
+        return self.transcribe_audio()
+
+    def transcribe_audio(
+            self,
+        audio_input: str = "temp.wav",
+        model_size: str = "tiny",
+        language: str = None,
+        beam_size: int = 5,
+        without_timestamps: bool = True
+    ) -> str:
+        import io
+        from faster_whisper import WhisperModel
+
+        """
+        `audio_input` can be:
+        - a file path (str or Path)
+        - bytes
+        - a file-like object (.read())
+        """
+
+        if isinstance(audio_input, (str, bytes)):
+            input_for_model = audio_input
+        elif hasattr(audio_input, "read"):
+            data = audio_input.read()
+            input_for_model = io.BytesIO(data)
+        else:
+            raise ValueError("audio_input must be filepath, bytes, or file-like object")
+
+        # Load model
+        model = WhisperModel(model_size, device="auto", compute_type="auto")
+
+        # Transcribe
+        segments, info = model.transcribe(
+            input_for_model,
+            language=language,
+            beam_size=beam_size,
+        )
+
+        # Build transcript
+        transcript = []
+        for seg in segments:
+            if without_timestamps:
+                transcript.append(seg.text)
+            else:
+                transcript.append(f"[{seg.start:.2f}–{seg.end:.2f}] {seg.text}")
+
+        return " ".join(transcript)

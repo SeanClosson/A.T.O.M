@@ -1,0 +1,41 @@
+# ================================
+# LLM (Large Language Model) Config
+# ================================
+LLM:
+  # Name of the model you are running
+  MODEL_NAME: your_model_name_here
+
+  # Base URL of your LLM API
+  BASE_URL: http://localhost:1234/v1
+
+  # API Key for authentication
+  API_KEY: your_api_key_here
+
+
+# ================================
+# Home Assistant Config
+# ================================
+HA:
+  # URL of your Home Assistant instance
+  HASS_URL: http://homeassistant.local:8123/
+
+  # Long-lived access token
+  HASS_TOKEN: your_homeassistant_token_here
+
+
+# ================================
+# Home Assistant Tools (Entities)
+# ================================
+HA_TOOLS:
+  LIGHT_ENTITY: light.example_light
+  TEMPERATURE_ENTITY: sensor.example_temperature
+  HUMIDITY_ENTITY: sensor.example_humidity
+  AMBIENT_LIGHT_ENTITY: sensor.example_ambient_light
+  SOUND_LEVEL_ENTITY: sensor.example_sound_level
+
+
+# ================================
+# Spider-Bot Config (Custom Hardware)
+# ================================
+SPIDER-BOT:
+  IP_ADDRESS: 192.168.0.X

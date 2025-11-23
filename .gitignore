@@ -179,3 +179,23 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+
+.idea
+.venv
+.env
+uv.lock
+robots/__pycache__
+stt/__pycache__
+tools/__pycache__
+tts/__pycache__
+config.yaml
+__pycache__
+.python-version
+user.jpg
+realtimesst.log
+*.pdf
+tools/system_monitor.py
+tts/en_US-lessac-medium.onnx
+tts/en_US-lessac-medium.onnx.json
+prompt.txt
