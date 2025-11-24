@@ -38,10 +38,19 @@ def get_humidity() -> str:
 
 
 @tool
-def toggle_wled() -> str:
-    """Toggles the WLED light on or off using Home Assistant."""
+def toggle_wled(query: str) -> str:
+    """Turns WLED on/off
+
+    Parameters
+    ----------
+    desired_state : str
+        The state you want the light to be in. Accepts:
+        - "on"
+        - "off"
+    
+    """
     try:
-        return ha_wrapper.toggle_wled()
+        return ha_wrapper.ensure_wled_state(desired_state=query)
     except Exception as e:
         return f"[ERROR] Failed to toggle WLED: {e}"
 

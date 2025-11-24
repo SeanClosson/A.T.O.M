@@ -138,7 +138,7 @@ class HomeAssistant():
         """Checks the current state of the WLED light (on/off)."""
         url = f"{HASS_URL}api/states/{LIGHT_ENTITY}"
 
-        print(f"🔍 DEBUG: Sending GET request to {url}")
+        # print(f"🔍 DEBUG: Sending GET request to {url}")
         
         try:
             response = requests.get(url, headers=HEADERS)
@@ -158,3 +158,81 @@ class HomeAssistant():
                 return {"response": f"Failed to retrieve light state: {response.status_code} - {response.text}"}
         except Exception as e:
             return {"response": f"Error retrieving light state: {str(e)}"}
+    
+    def ensure_wled_state(self, desired_state: str) -> dict:
+        """
+        Ensures the WLED light reaches a desired state ("on" or "off").
+
+        This function is designed for use by an AI agent that needs reliable,
+        state-aware control over WLED lighting through Home Assistant.
+
+        Behavior:
+        1. It first checks the current light state using `get_light_state()`.
+        (This is always done to avoid unnecessary toggling.)
+        2. If the light is already in the desired state, it returns a confirmation
+        without making any changes.
+        3. If the light is *not* in the desired state, it calls `toggle_wled()`
+        to switch the light.
+        4. It verifies the final state and returns a structured response.
+
+        Parameters
+        ----------
+        desired_state : str
+            The state you want the light to be in. Accepts:
+            - "on"
+            - "off"
+
+        Returns
+        -------
+        dict
+            A dictionary containing a human-readable message describing what
+            occurred, including errors if they happen.
+
+        Example
+        -------
+        >>> ensure_wled_state("on")
+        {'response': 'WLED was OFF and has now been turned ON.'}
+
+        Notes
+        -----
+        - This function relies on the existing helper functions:
+            * `get_light_state()`
+            * `toggle_wled()`
+        - The function uses text parsing because `get_light_state()` returns a
+        sentence rather than a raw state value.
+        """
+        
+        desired_state = desired_state.lower().strip()
+        if desired_state not in ("on", "off"):
+            return {"response": f"Invalid desired_state '{desired_state}'. Use 'on' or 'off'."}
+
+        # Step 1: Check current state
+        state_info = self.get_light_state()
+        state_text = state_info.get("response", "").lower()
+
+        if "on" in state_text:
+            current = "on"
+        elif "off" in state_text:
+            current = "off"
+        else:
+            return {"response": f"Could not determine light state. Raw response: {state_text}"}
+
+        # Step 2: If already in the desired state, do nothing
+        if current == desired_state:
+            return {"response": f"WLED is already {desired_state.upper()}."}
+
+        # Step 3: Toggle if needed
+        toggle_result = self.toggle_wled()
+        toggle_text = toggle_result.get("response", "")
+
+        # Step 4: Verify new state
+        final_state_text = self.get_light_state().get("response", "").lower()
+        if desired_state in final_state_text:
+            return {"response": f"WLED was {current.upper()} and has now been turned {desired_state.upper()}."}
+        else:
+            return {
+                "response": (
+                    f"Tried to change WLED from {current.upper()} to {desired_state.upper()}, "
+                    f"but it may not have succeeded. Toggle result: {toggle_text}"
+                )
+            }
