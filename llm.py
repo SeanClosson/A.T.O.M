@@ -95,6 +95,7 @@ class LLM():
                 model=self.model_name,
                 streaming=True,
                 verbose=False,
+                temperature=0.2,
                 max_tokens=1024,
                 max_retries=3,
                 timeout=180

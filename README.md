@@ -1,8 +1,9 @@
-# **README – ATOM**
+# A.T.O.M 
 
 ### *A Modular Local AI Assistant for Voice Interaction, Automation & Computer Vision*
 
 ---
+
 ## 📘 Overview
 
 **ATOM (Autonomous Tool-Orchestrating Operation Machine)** is a modular, local AI assistant designed to provide natural language interaction, execute structured tasks through tool-based function calling, perform basic image analysis, and interface with physical robotic devices.
@@ -15,9 +16,6 @@ The system emphasizes:
 * and real-world functionality.
 
 ATOM currently uses **RealtimeSTT** (terminal-only speech input) and runs on **Qwen/Qwen3-VL-4B locally through LM Studio** as the primary language model backend.
-
-This project is under active development and is intended to demonstrate applied engineering, AI integration, and robotics control capabilities for academic evaluation.
----
 
 <br>
 
@@ -42,6 +40,14 @@ This project is under active development and is intended to demonstrate applied 
 * Live camera capture
 * Local image analysis pipeline
 * Integrated tool: `capture_and_analyze_photo`
+
+### 🔊 Experimental Text-to-Speech
+
+* Experimental Piper-based TTS integration
+* Local voice synthesis
+* CLI-triggered speech output
+
+> **Note:** TTS is still experimental and may be unstable.
 
 ### 🤖 Physical Presence
 
@@ -81,7 +87,7 @@ dance_quadruped
 
 ### 🗂 System Status
 
-* No TTS at present
+* Experimental TTS now available
 * No wake word yet
 * No long-term memory
 * No calendar sync
@@ -165,8 +171,33 @@ Other OS / environment configurations have not been evaluated yet.
 | UI                 | Streamlit          |
 | API Layer          | FastAPI            |
 | Robotics Interface | Python modules     |
+| TTS Engine         | Piper              |
 | PDF Engine         | reportlab          |
 | Web Parser         | BeautifulSoup      |
+
+---
+<br>
+
+# 🎬 Demo Video
+
+YouTube Demo:
+
+👉 [A.T.O.M Demo Video (November 2025)
+](https://youtu.be/CzL6SG0E3HI)
+
+Laptop Specifications (Runs everything besides the LLM):
+
+- CPU: 11th Gen Intel(R) Core(TM) i5-1145G7 (8) @ 4.40 GHz
+- GPU: Intel Iris Xe Graphics @ 1.30 GHz [Integrated]
+- RAM: 16GB
+
+Desktop Specifications (Runs LM Studio):
+
+- CPU: AMD Ryzen 5 5600G (Overclocked to 4.6 GHz)
+- GPU: NVIDIA GTX 1650 (Slight Overclock)
+- RAM: 32 GB DDR4 3200 MHz
+
+Performance is around 30 tokens/second with my hardware. Token limit is set at 8k and 33 of 36 layers are offloaded to the GPU and all 6 threads of my CPU are allocated to LM Studio.
 
 ---
 
@@ -177,8 +208,8 @@ Other OS / environment configurations have not been evaluated yet.
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/AtifUsmani/ATOM.git
-cd ATOM
+git clone https://github.com/AtifUsmani/A.T.O.M
+cd A.T.O.M
 ```
 
 ### 2. Create Conda Environment
@@ -194,6 +225,13 @@ conda activate atom
 
 ```bash
 pip install -r requirements.txt
+```
+
+For TTS:
+
+```bash
+cd tts
+python3 -m piper.download_voices en_US-lessac-medium
 ```
 
 ### 4. Configure Application
@@ -232,7 +270,7 @@ Then edit `prompt.txt` to modify the system behavior / personality.
 To start ATOM in **command-line mode (with STT):**
 
 ```bash
-python main.py      # this starts ATOM in CLI
+python atom.py      # this starts ATOM in CLI
 ```
 
 #### OR
@@ -267,4 +305,3 @@ streamlit run frontend/main.py
 * “Analyze this photo.”
 * “Make the robot greet me.”
 
-<br>

@@ -65,7 +65,7 @@ class Camera():
 
         stable_frame = frames[len(frames) // 2]
 
-        path = "user.jpg"
+        path = "generated/user.jpg"
         cv2.imwrite(path, stable_frame)
         return path
 
@@ -115,7 +115,7 @@ class Camera():
             {"type": "text", "text": prompt},
             {
                 "type": "image",
-                "base64": self.encode_image_base64("user.jpg"),
+                "base64": self.encode_image_base64("generated/user.jpg"),
                 "mime_type": "image/jpeg",
             }
         ]),

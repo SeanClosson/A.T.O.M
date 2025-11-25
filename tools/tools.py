@@ -27,7 +27,6 @@ def get_temperature() -> str:
     except Exception as e:
         return f"[ERROR] Failed to get temperature: {e}"
 
-
 @tool
 def get_humidity() -> str:
     """Retrieves the current room humidity from Home Assistant."""
@@ -35,7 +34,6 @@ def get_humidity() -> str:
         return ha_wrapper.get_humidity()
     except Exception as e:
         return f"[ERROR] Failed to get humidity: {e}"
-
 
 @tool
 def toggle_wled(query: str) -> str:
@@ -53,7 +51,6 @@ def toggle_wled(query: str) -> str:
         return ha_wrapper.ensure_wled_state(desired_state=query)
     except Exception as e:
         return f"[ERROR] Failed to toggle WLED: {e}"
-
 
 @tool
 def get_light_state() -> str:
@@ -75,7 +72,6 @@ def set_timer(duration: int, task_name: str) -> str:
     except Exception as e:
         return f"[ERROR] Failed to set timer '{task_name}': {e}"
 
-
 @tool
 def cancel_timer(task_name: str) -> str:
     """
@@ -87,7 +83,6 @@ def cancel_timer(task_name: str) -> str:
     except Exception as e:
         return f"[ERROR] Failed to cancel timer '{task_name}': {e}"
 
-
 @tool
 def list_timers() -> str:
     """
@@ -98,7 +93,6 @@ def list_timers() -> str:
         return str({"Active timers": timers})
     except Exception as e:
         return f"[ERROR] Failed to list timers: {e}"
-
 
 @tool(return_direct=False)
 def capture_and_analyze_photo(query: str) -> str:
@@ -143,7 +137,6 @@ def capture_and_analyze_photo(query: str) -> str:
     except Exception as e:
         return f"[ERROR] Failed to serialize analysis: {e}"
 
-
 @tool
 def get_date_time() -> str:
     """Returns the current date and time."""
@@ -157,7 +150,6 @@ def get_date_time() -> str:
         return str(result)
     except Exception as e:
         return f"[ERROR] Failed to get date/time: {e}"
-
 
 def extract_from_json(_) -> str:
     """Retrieves data from a json file."""
@@ -173,7 +165,7 @@ def create_file(name: str, content: str) -> str:
     """Create a file with the given name and content. Can be used for making python scripts and CSV files."""
     from pathlib import Path
 
-    dest_path = Path(name)
+    dest_path = Path(f'generated/{name}')
     if dest_path.exists():
         return "Error: File already exists."
     try:
@@ -202,16 +194,19 @@ def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
     """
     Safely create a professional PDF with title, paragraphs, and optional tables.
     Includes full error handling for file, ReportLab, and data issues.
+    Saves the file inside the 'generated' folder.
     """
+    import os
+
+    # Ensure output directory exists
+    output_dir = "generated"
     try:
-        from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-        )
-        from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib import colors
+        os.makedirs(output_dir, exist_ok=True)
     except Exception as e:
-        return f"[ERROR] Failed to import ReportLab modules: {e}"
+        return f"[ERROR] Could not create output directory: {e}"
+
+    # Build full file path
+    filename = os.path.join(output_dir, filename)
 
     # Validate basic params
     if not isinstance(filename, str) or not filename.strip():
@@ -222,6 +217,15 @@ def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
 
     if not isinstance(content, str):
         return "[ERROR] Content must be a string."
+
+    # Import ReportLab
+    try:
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+    except Exception as e:
+        return f"[ERROR] Failed to import ReportLab modules: {e}"
 
     try:
         styles = getSampleStyleSheet()
@@ -235,45 +239,39 @@ def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
         )
 
         # Title
-        try:
-            story.append(Paragraph(f"<b><font size=16>{title}</font></b>", styles["Title"]))
-            story.append(Spacer(1, 20))
-        except Exception as e:
-            return f"[ERROR] Failed to create title: {e}"
+        story.append(Paragraph(f"<b><font size=16>{title}</font></b>", styles["Title"]))
+        story.append(Spacer(1, 20))
 
-        # Body text
-        try:
-            for line in content.split("\n"):
-                story.append(Paragraph(line, styles["BodyText"]))
-                story.append(Spacer(1, 12))
-        except Exception as e:
-            return f"[ERROR] Failed to add content paragraphs: {e}"
+        # Body paragraphs
+        for line in content.split("\n"):
+            story.append(Paragraph(line, styles["BodyText"]))
+            story.append(Spacer(1, 12))
 
         # Optional table
         if table_data:
-            try:
-                if not isinstance(table_data, (list, tuple)):
-                    return "[ERROR] table_data must be a list/tuple of rows."
+            if not isinstance(table_data, (list, tuple)):
+                return "[ERROR] table_data must be a list/tuple of rows."
 
-                table = Table(table_data, hAlign="LEFT")
-                table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ]))
-                story.append(Spacer(1, 20))
-                story.append(table)
-            except Exception as e:
-                return f"[ERROR] Failed to create table: {e}"
+            # Validate rows have equal length
+            row_lengths = {len(row) for row in table_data}
+            if len(row_lengths) > 1:
+                return "[ERROR] All table rows must have the same number of columns."
 
-        # Build the PDF
-        try:
-            doc.build(story)
-        except Exception as e:
-            return f"[ERROR] Failed to build PDF: {e}"
+            table = Table(table_data, hAlign="LEFT")
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ]))
 
-        return f"PDF created at {filename}"
+            story.append(Spacer(1, 20))
+            story.append(table)
+
+        # Build PDF
+        doc.build(story)
+
+        return f"PDF successfully created at {filename}"
 
     except Exception as e:
         return f"[ERROR] Unexpected failure: {e}"

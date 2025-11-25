@@ -51,6 +51,8 @@ class CLIStreamer:
         self.history.append(("assistant", generated))
         self.console.print()  # newline
 
+        yield generated
+
     def stream_to_console_basic(self, user_input):
         # print(user_input)
 
@@ -73,10 +75,10 @@ class CLIStreamer:
             generated += delta
 
             # PRINT NEW DELTA
-            print(delta, end="", flush=True)
+            # print(delta, end="", flush=True)
 
             # YIELD CHUNK TO MAIN + TTS
-            # yield delta
+            yield delta
 
         print("\n")
         self.history.append(("assistant", generated))
