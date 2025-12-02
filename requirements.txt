@@ -35,6 +35,7 @@ hf-xet==1.2.0
 httpcore==1.0.9
 httpx==0.28.1
 httpx-sse==0.4.3
+httpx-ws==0.8.2
 huggingface_hub==1.1.5
 humanfriendly==10.0
 idna==3.11
@@ -56,12 +57,14 @@ langgraph-checkpoint==3.0.1
 langgraph-prebuilt==1.0.5
 langgraph-sdk==0.2.9
 langsmith==0.4.46
+lmstudio==1.5.0
 log-symbols==0.0.14
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 marshmallow==3.26.1
 mdurl==0.1.2
 mpmath==1.3.0
+msgspec==0.20.0
 multidict==6.7.0
 mypy_extensions==1.1.0
 narwhals==2.12.0
@@ -156,6 +159,7 @@ websocket-client==1.8.0
 websockets==15.0.1
 wheel==0.45.1
 Wikipedia-API==0.8.1
+wsproto==1.3.2
 xxhash==3.6.0
 yarl==1.22.0
 zstandard==0.25.0

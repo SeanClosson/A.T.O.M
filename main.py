@@ -24,6 +24,16 @@ from tts.tts_piper import TTS
 from llm import LLM
 brain = LLM()
 
+def init_lms(progress_bar):
+    global LMS
+
+    try:
+        from lms import LMSTUDIO
+        LMS = LMSTUDIO()
+        progress_bar.update(1)
+    except Exception as e:
+        print(f"[ERROR] Failed to initialize Model: {e}")
+
 def init_cli(progress_bar):
     global cli
 
@@ -62,18 +72,21 @@ def init_tts(progress_bar):
 
 def initialize():
     # Create a progress bar with total 2 tasks (STT and TTS)
-    with tqdm(total=3, desc="Initializing") as progress_bar:
+    with tqdm(total=4, desc="Initializing") as progress_bar:
         # Start threads
+        lms_thread = threading.Thread(target=init_lms, args=(progress_bar,))
         cli_thread = threading.Thread(target=init_cli, args=(progress_bar,))
         stt_thread = threading.Thread(target=init_stt, args=(progress_bar,))
         tts_thread = threading.Thread(target=init_tts, args=(progress_bar,))
 
         # Start the threads
+        lms_thread.start()
         cli_thread.start()
         stt_thread.start()
         tts_thread.start()
 
         # Wait for the threads to finish before proceeding with the rest of the program
+        lms_thread.join()
         cli_thread.join()
         stt_thread.join()
         tts_thread.join()
@@ -102,7 +115,12 @@ def graceful_exit(*args):
             brain.shutdown()
     except Exception:
         pass
-
+    
+    try:
+        LMS.unload_model()
+    except Exception as e:
+        print(f"[WARN] Failed to unload model: {e}")
+    
     print("[INFO] Exit complete. Goodbye.")
     sys.exit(0)
 
