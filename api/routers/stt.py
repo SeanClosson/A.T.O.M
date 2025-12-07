@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 router = APIRouter()
 
-stt = STT()
+stt = STT(mode='normal')
 
 executor = ThreadPoolExecutor(max_workers=1)
 

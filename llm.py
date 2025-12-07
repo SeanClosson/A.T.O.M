@@ -4,12 +4,18 @@ from langchain.agents import create_agent, AgentState
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain.messages import ToolMessage, RemoveMessage
-from langchain.agents.middleware import ToolRetryMiddleware, FilesystemFileSearchMiddleware, wrap_tool_call, before_model
+from langchain.agents.middleware import ToolRetryMiddleware, FilesystemFileSearchMiddleware, wrap_tool_call, before_model, SummarizationMiddleware
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
 from tools.tools import tools
 from tools.system_tools import system_tools
 from langgraph.runtime import Runtime
 from typing import Any
+
+from memory.long_term_memory import LongTermMemory
+from memory.memory_retrieval_middleware import MemoryRetrievalMiddleware
+from memory.memory_write_middleware import AsyncMemoryWriteMiddleware
+from debug.token_debug_middleware import TokenDebugMiddleware
+
 
 # Load the prompt from a text file
 with open("prompt.txt", "r", encoding="utf-8") as f:
@@ -21,7 +27,6 @@ def handle_tool_errors(request, handler):
     try:
         return handler(request)
     except Exception as e:
-        # Return a custom error message to the model
         return ToolMessage(
             content=f"Tool error: Please check your input and try again. ({str(e)})",
             tool_call_id=request.tool_call["id"]
@@ -33,7 +38,7 @@ def trim_messages(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
     messages = state["messages"]
 
     if len(messages) <= 3:
-        return None  # No changes needed
+        return None
 
     first_msg = messages[0]
     recent_messages = messages[-3:] if len(messages) % 2 == 0 else messages[-4:]
@@ -77,11 +82,13 @@ class LLM():
         try:
             llm_cfg = config.get("LLM", {})
             self.model_name = llm_cfg.get("MODEL_NAME", "qwen/qwen3-vl-4b")
+            self.summary_model_name = llm_cfg.get("SUMMARY_MODEL_NAME", "qwen/qwen3-1.7b")
             self.base_url = llm_cfg.get("BASE_URL", "http://localhost:1234/v1")
             self.api_key = llm_cfg.get("API_KEY", "no-key-required")
         except Exception as e:
             print(f"[ERROR] Invalid config format: {e}")
             self.model_name = "qwen/qwen3-vl-4b"
+            self.summary_model_name = "qwen/qwen3-1.7b"
             self.base_url = "http://localhost:1234/v1"
             self.api_key = "no-key-required"
 
@@ -100,9 +107,25 @@ class LLM():
                 max_retries=3,
                 timeout=180
             )
+
+            self.summary_model = ChatOpenAI(
+                base_url=self.base_url,
+                api_key=self.api_key,
+                model=self.summary_model_name,
+                streaming=False,
+                temperature=0,
+                max_retries=3,
+                timeout=400
+            )
         except Exception as e:
             print(f"[ERROR] Failed to initialize ChatOpenAI model: {e}")
-            self.model = None  # Important indicator for agent logic
+            self.model = None
+
+        self.long_term_memory = LongTermMemory()
+        memory_retriever = MemoryRetrievalMiddleware(self.long_term_memory)
+        memory_writer = AsyncMemoryWriteMiddleware(self.long_term_memory, self.summary_model)
+        debugger = TokenDebugMiddleware(tokenizer=self.model.get_num_tokens)
+
 
         # -----------------------------
         # Validate tools list
@@ -123,7 +146,15 @@ class LLM():
                 tools=self.tools,
                 system_prompt=self.system_prompt,
                 middleware=[
+                    debugger,
+                    # memory_retriever,
                     trim_messages,
+                    SummarizationMiddleware(
+                        model=self.summary_model,
+                        trigger=("tokens", 4000),
+                        keep=("messages", 20),
+                    ),
+                    memory_writer,
                     ToolRetryMiddleware(
                         max_retries=3,
                         backoff_factor=2.0,
@@ -133,7 +164,7 @@ class LLM():
                         root_path=Path(__file__).resolve(),
                         use_ripgrep=True,
                     ),
-                    handle_tool_errors
+                    handle_tool_errors,
                 ],
                 checkpointer=InMemorySaver(),
             )

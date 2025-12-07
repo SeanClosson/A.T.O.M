@@ -4,6 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routers import chat, stream, stt, system
 
+try:
+    from lms import LMSTUDIO
+    LMS = LMSTUDIO()
+except Exception as e:
+    print(f"[ERROR] Failed to initialize Model: {e}")
+
 app = FastAPI(title="ATOM API", version="1.0")
 
 app.add_middleware(

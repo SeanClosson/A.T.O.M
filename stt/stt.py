@@ -2,37 +2,45 @@ import RealtimeSTT
 import logging
 
 class STT:
-    def __init__(self):
+    def __init__(self, mode = 'normal'):
         self.recorder_normal = None
         self.recorder_realtime = None
 
-        try:
-            self.recorder_normal = RealtimeSTT.AudioToTextRecorder(
-                model="tiny.en",
-                enable_realtime_transcription=False
-            )
+        self.mode = mode.strip()
 
-            self.recorder_realtime = RealtimeSTT.AudioToTextRecorder(
-                model="tiny.en",
-                realtime_model_type="tiny.en",
-                language="en",
-                enable_realtime_transcription=True,
-                # on_realtime_transcription_update=on_partial,
-                # on_realtime_transcription_stabilized=on_partial,  # optional
-                post_speech_silence_duration=0.7,
-                silero_sensitivity=0.05,
-                webrtc_sensitivity=3,
-                min_length_of_recording=1.1,
-                min_gap_between_recordings=0,
-                no_log_file=False,
-                silero_use_onnx=True,
-                handle_buffer_overflow=False,
-                level=logging.ERROR
-            )
-        except Exception as e:
-            print(f"[ERROR] Failed to initialize RealtimeSTT recorder: {e}")
-            self.recorder_normal = None
-            self.recorder_realtime = None
+        if self.mode == 'normal':
+            try:
+                self.recorder_normal = RealtimeSTT.AudioToTextRecorder(
+                    model="tiny.en",
+                    enable_realtime_transcription=False
+                )
+            except Exception as e:
+                print(f"[ERROR] Failed to initialize RealtimeSTT recorder: {e}")
+                self.recorder_normal = None
+
+        if self.mode == 'realtime':
+            try:
+                self.recorder_realtime = RealtimeSTT.AudioToTextRecorder(
+                    model="tiny.en",
+                    realtime_model_type="tiny.en",
+                    language="en",
+                    enable_realtime_transcription=True,
+                    # on_realtime_transcription_update=on_partial,
+                    # on_realtime_transcription_stabilized=on_partial,  # optional
+                    post_speech_silence_duration=0.7,
+                    silero_sensitivity=0.05,
+                    webrtc_sensitivity=3,
+                    min_length_of_recording=1.1,
+                    min_gap_between_recordings=0,
+                    no_log_file=False,
+                    silero_use_onnx=True,
+                    handle_buffer_overflow=False,
+                    level=logging.ERROR
+                )
+
+            except Exception as e:
+                print(f"[ERROR] Failed to initialize RealtimeSTT recorder: {e}")
+                self.recorder_realtime = None
 
     def realtime_stt(self):
         if self.recorder_realtime is None:
@@ -72,13 +80,23 @@ class STT:
         """
         Safely shut down the STT system.
         """
-        if self.recorder_normal is None:
-            return
+        if self.mode == 'normal':
+            if self.recorder_normal is None:
+                return
 
-        try:
-            self.recorder_normal.shutdown()
-        except Exception as e:
-            print(f"[WARN] Failed to shutdown STT recorder cleanly: {e}")
+            try:
+                self.recorder_normal.shutdown()
+            except Exception as e:
+                print(f"[WARN] Failed to shutdown STT recorder cleanly: {e}")
+
+        if self.mode == 'realtime':
+            if self.recorder_realtime is None:
+                return
+
+            try:
+                self.recorder_realtime.shutdown()
+            except Exception as e:
+                print(f"[WARN] Failed to shutdown STT recorder cleanly: {e}")
     
     def transcribe_for_api(self, audio_bytes):
         # Save bytes → temp wav

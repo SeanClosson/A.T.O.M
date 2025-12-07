@@ -31,8 +31,20 @@ def init_lms(progress_bar):
         from lms import LMSTUDIO
         LMS = LMSTUDIO()
         progress_bar.update(1)
+
+        try:
+            LMS.load_model()
+        except Exception as e:
+            progress_bar.update(1)
+            print(f"[ERROR] Failed to initialize Model: {e}")
+
+        try:
+            LMS.load_summary_model()
+        except Exception as e:
+            progress_bar.update(1)
+            print(f"[ERROR] Failed to initialize Summary Model: {e}")
     except Exception as e:
-        print(f"[ERROR] Failed to initialize Model: {e}")
+        print(f"[ERROR] Failed to initialize LM Studio: {e}")
 
 def init_cli(progress_bar):
     global cli
@@ -44,13 +56,12 @@ def init_cli(progress_bar):
     except Exception as e:
         print(f"[ERROR] Failed to initialize CLI: {e}")
 
-# Function to initialize STT
 def init_stt(progress_bar):
     global stt, USE_STT
     if USE_STT:
         try:
             from stt.stt import STT
-            stt = STT()
+            stt = STT(mode='realtime')
             progress_bar.update(1)
         except Exception as e:
             print(f"[ERROR] Failed to initialize STT: {e}")
@@ -58,7 +69,6 @@ def init_stt(progress_bar):
             stt = None
             USE_STT = False
 
-# Function to initialize TTS
 def init_tts(progress_bar):
     global tts, USE_TTS
     try:
@@ -71,8 +81,7 @@ def init_tts(progress_bar):
         USE_TTS = False
 
 def initialize():
-    # Create a progress bar with total 2 tasks (STT and TTS)
-    with tqdm(total=4, desc="Initializing") as progress_bar:
+    with tqdm(total=6, desc="Initializing") as progress_bar:
         # Start threads
         lms_thread = threading.Thread(target=init_lms, args=(progress_bar,))
         cli_thread = threading.Thread(target=init_cli, args=(progress_bar,))
@@ -99,31 +108,29 @@ def graceful_exit(*args):
     print("\n\n[INFO] Shutting down ATOM...")
 
     try:
+        LMS.unload_model()
+    except Exception as e:
+        print(f"[WARN] Failed to unload model: {e}")
+
+    try:
         if USE_STT and stt:
             stt.shutdown_stt()
     except Exception as e:
         print(f"[WARN] Failed to shut down STT cleanly: {e}")
-
     try:
         if USE_TTS and tts:
             tts.close() if hasattr(tts, "close") else None
     except Exception as e:
         print(f"[WARN] Failed to shut down TTS cleanly: {e}")
-
     try:
         if hasattr(brain, "shutdown"):
             brain.shutdown()
     except Exception:
         pass
     
-    try:
-        LMS.unload_model()
-    except Exception as e:
-        print(f"[WARN] Failed to unload model: {e}")
-    
-    print("[INFO] Exit complete. Goodbye.")
+    print("\n[INFO] Exit complete. Goodbye.")
     sys.exit(0)
-
+    
 # Catch Ctrl+C globally
 signal.signal(signal.SIGINT, graceful_exit)
 signal.signal(signal.SIGTERM, graceful_exit)
