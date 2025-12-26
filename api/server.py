@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routers import chat, stream, stt, system
 
 try:
-    from lms import LMSTUDIO
+    from core.lms import LMSTUDIO
     LMS = LMSTUDIO()
 except Exception as e:
     print(f"[ERROR] Failed to initialize Model: {e}")

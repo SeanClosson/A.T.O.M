@@ -1,0 +1,8 @@
+name: "Weather sanity test"
+steps:
+  - user: "what's the weather in London?"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "get_weather"

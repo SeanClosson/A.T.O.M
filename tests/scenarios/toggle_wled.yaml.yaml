@@ -1,0 +1,8 @@
+name: "WLED off sanity test"
+steps:
+  - user: "turn the wled off"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "toggle_wled"

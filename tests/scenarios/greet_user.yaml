@@ -1,0 +1,8 @@
+name: "Greet user sanity test"
+steps:
+  - user: "hi"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "greet_user"

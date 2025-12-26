@@ -1,5 +1,20 @@
+# ================================
+# General Configuration
+# ================================
 USE_STT: True         # Either True/False
 USE_TTS: True         # Either True/False
+USE_EDGE_TTS: True    # Either True/False (If disabled, Piper-TTS will be used.)
+ROBOTIC_ARM: False    # Either True/False
+
+# ================================
+# User Configuration
+# ================================
+USER_ID: X #Replace with your Name
+
+# ================================
+# Embedding Server Config
+# ================================
+EMBEDDING_SERVER_BASE_URL: http://localhost:2000/v1
 
 # ================================
 # LLM (Large Language Model) Config
@@ -17,6 +32,10 @@ LLM:
   # API Key for authentication
   API_KEY: your_api_key_here
 
+# ================================
+# SearXNG Config
+# ================================
+SEARXNG_URL: http://localhost:8888
 
 # ================================
 # Home Assistant Config
@@ -39,9 +58,14 @@ HA_TOOLS:
   AMBIENT_LIGHT_ENTITY: sensor.example_ambient_light
   SOUND_LEVEL_ENTITY: sensor.example_sound_level
 
-
 # ================================
 # Spider-Bot Config (Custom Hardware)
 # ================================
 SPIDER-BOT:
   IP_ADDRESS: 192.168.0.X
+
+# ================================
+# Robot-Arm Config (Custom Hardware)
+# ================================
+ROBOT-ARM:
+  IP_ADDRESS: 192.168.0.Y

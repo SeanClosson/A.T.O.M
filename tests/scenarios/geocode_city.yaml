@@ -1,0 +1,8 @@
+name: "Geocode city sanity test"
+steps:
+  - user: "find coordinates of New York"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "geocode_city"

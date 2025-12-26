@@ -1,0 +1,8 @@
+name: "Create PDF sanity test"
+steps:
+  - user: "make a pdf for me containing the temperature and humidity"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "create_pdf"

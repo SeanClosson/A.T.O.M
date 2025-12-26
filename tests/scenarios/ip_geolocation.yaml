@@ -1,0 +1,8 @@
+name: "IP geolocation sanity test"
+steps:
+  - user: "where am I based on IP?"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "ip_geolocation"

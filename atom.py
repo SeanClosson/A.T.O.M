@@ -1,4 +1,5 @@
-from main import main
+#atom.py
+from core.main import main
 
 if __name__ == "__main__":
     main()

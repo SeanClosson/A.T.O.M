@@ -19,16 +19,16 @@ ensure_generated_folder()
 
 USE_STT = bool(config['USE_STT'])
 USE_TTS = bool(config['USE_TTS'])
+USE_EDGE_TTS = bool(config['USE_EDGE_TTS'])
 
-from tts.tts_piper import TTS
-from llm import LLM
+from core.llm import LLM
 brain = LLM()
 
 def init_lms(progress_bar):
     global LMS
 
     try:
-        from lms import LMSTUDIO
+        from core.lms import LMSTUDIO
         LMS = LMSTUDIO()
         progress_bar.update(1)
 
@@ -50,7 +50,7 @@ def init_cli(progress_bar):
     global cli
 
     try:
-        from cli import CLIStreamer
+        from interfaces.cli import CLIStreamer
         cli = CLIStreamer(brain)
         progress_bar.update(1)
     except Exception as e:
@@ -70,15 +70,22 @@ def init_stt(progress_bar):
             USE_STT = False
 
 def init_tts(progress_bar):
-    global tts, USE_TTS
-    try:
-        tts = TTS()
-        progress_bar.update(1)
-    except Exception as e:
-        print(f"[ERROR] Failed to initialize TTS: {e}")
-        progress_bar.update(1)
-        tts = None
-        USE_TTS = False
+    global voiceEngine, USE_TTS
+    if USE_TTS:
+        if USE_EDGE_TTS:
+            from tts.tts_edge import TTS
+        else:
+            from tts.tts_piper import TTS
+        try:
+            voiceEngine = TTS()
+            from tts.voice import set_voice_engine
+            set_voice_engine(voiceEngine)
+            progress_bar.update(1)
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize TTS: {e}")
+            progress_bar.update(1)
+            voiceEngine = None
+            USE_TTS = False
 
 def initialize():
     with tqdm(total=6, desc="Initializing") as progress_bar:
@@ -107,6 +114,15 @@ def initialize():
 def graceful_exit(*args):
     print("\n\n[INFO] Shutting down ATOM...")
 
+    if config["ROBOTIC_ARM"]:
+        try:
+            from tools.tools import close_connections
+            close_connections()
+        except Exception as e:
+            print(f"[WARN] Failed to close tool connections: {e}")
+    else:
+        pass
+
     try:
         LMS.unload_model()
     except Exception as e:
@@ -118,8 +134,8 @@ def graceful_exit(*args):
     except Exception as e:
         print(f"[WARN] Failed to shut down STT cleanly: {e}")
     try:
-        if USE_TTS and tts:
-            tts.close() if hasattr(tts, "close") else None
+        if USE_TTS and voiceEngine:
+            voiceEngine.close() if hasattr(voiceEngine, "close") else None
     except Exception as e:
         print(f"[WARN] Failed to shut down TTS cleanly: {e}")
     try:
@@ -135,28 +151,31 @@ def graceful_exit(*args):
 signal.signal(signal.SIGINT, graceful_exit)
 signal.signal(signal.SIGTERM, graceful_exit)
 
-
 def main():
     # --- Main Loop -----------------------------------------------------------------
     initialize()
+    i = 0
 
     while True:
         try:
-            # Get input
-            if USE_STT:
-                try:
-                    # user_input = stt.normal_stt()
-                    user_input = stt.realtime_stt()
-                except Exception as e:
-                    print(f"[ERROR] STT error: {e}")
-                    continue
+            if i == 0:
+                user_input = 'hi'
             else:
-                user_input = input("\nYou: ")
+                # Get input
+                if USE_STT:
+                    try:
+                        # user_input = stt.normal_stt()
+                        user_input = stt.realtime_stt()
+                    except Exception as e:
+                        print(f"[ERROR] STT error: {e}")
+                        continue
+                else:
+                    user_input = input("\nYou: ")
 
-            # Exit condition
-            if user_input.lower() in ("exit", "quit", "exit."):
-                graceful_exit()
-
+                # Exit condition
+                if user_input.lower() in ("exit", "quit", "exit."):
+                    graceful_exit()
+            i = i + 1
             # Process LLM output
             try:
                 # cli.stream_to_console(user_input)
@@ -165,20 +184,20 @@ def main():
                     # print(delta, end="", flush=True)
                     full_output += delta
 
-                    # if USE_TTS and tts:
-                    #     # tts.push_text(delta)
+                    # if USE_TTS and voiceEngine:
+                    #     # voiceEngine.push_text(delta)
                 # print(full_output)
-                for_tts = tts.clean_for_tts(full_output)
-                if USE_TTS and tts:
-                        tts.text_to_wav(llm_output=for_tts)
-                        tts.play_wav_nonblocking()
+                # for_tts = voiceEngine.clean_for_tts(full_output)
+                # if USE_TTS and voiceEngine:
+                #         voiceEngine.text_to_wav(llm_output=for_tts)
+                #         voiceEngine.play_wav_nonblocking()
                 
             except Exception as e:
                 print(f"\n[ERROR] CLI/LLM streaming error: {e}")
 
-            # if USE_TTS and tts:
+            # if USE_TTS and voiceEngine:
             #     try:
-            #         tts.finish()
+            #         voiceEngine.finish()
             #     except Exception as e:
             #         print(f"[ERROR] TTS finish error: {e}")
 

@@ -107,7 +107,7 @@ class AsyncSummarizationMiddleware(AgentMiddleware):
                 res = self.summary_model.invoke(prompt)
                 summary = getattr(res, "content", "")
                 # Here: decide where to store the summary. TWO options:
-                # 1) Append to LongTermMemory (if available elsewhere) — recommended
+                # 1) Append to LongTermMemory (if available elsewhere)
                 # 2) Persist to a conversation DB or file, or call a callback that merges it into state
                 # We'll call runtime.create_message only if runtime exposes a thread-safe callback.
                 try:

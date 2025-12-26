@@ -1,0 +1,8 @@
+name: "Calculator sanity test"
+steps:
+  - user: "calculate 5 plus 5 times 3"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "calculate"

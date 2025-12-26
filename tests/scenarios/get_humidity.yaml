@@ -1,0 +1,8 @@
+name: "Get humidity sanity test"
+steps:
+  - user: "what's the humidity?"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "get_humidity"

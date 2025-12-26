@@ -19,5 +19,5 @@ def _worker():
 Thread(target=_worker, daemon=True).start()
 
 def run_in_background(fn):
-    print("⚙️ BACKGROUND JOB QUEUED")
+    # print("⚙️ BACKGROUND JOB QUEUED")
     _queue.put(fn)

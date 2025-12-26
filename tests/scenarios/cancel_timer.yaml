@@ -1,0 +1,8 @@
+name: "Cancel timer sanity test"
+steps:
+  - user: "cancel all timers"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "cancel_timer"

@@ -3,16 +3,12 @@ import threading
 import numpy as np
 from queue import Queue, Empty
 import re
-import wave
-from piper import PiperVoice
+import edge_tts
 import sounddevice as sd
 import soundfile as sf
-import io
 
 class TTS:
-    def __init__(self, model_path="tts/en_US-lessac-medium.onnx", sample_rate=22050):
-        self.model_path = model_path
-        self.sample_rate = sample_rate
+    def __init__(self):
 
         # Queues
         self.text_queue = Queue()
@@ -25,10 +21,9 @@ class TTS:
 
         # Buffer for sentence aggregation
         self.buffer = ""
-
         # Sentence boundary regex
         self.boundary = re.compile(r"[.!?;:\n]")
-        self.voice = PiperVoice.load(self.model_path)
+        self.VOICE = "en-US-AvaNeural"
 
     def clean_for_tts(self, text: str) -> str:
         # remove code fences
@@ -94,8 +89,8 @@ class TTS:
         return text.strip()
 
     def text_to_wav(self, llm_output):
-        with wave.open("tts/output.wav", "wb") as wav_file:
-            self.voice.synthesize_wav(self.clean_for_tts(llm_output), wav_file)
+        communicate = edge_tts.Communicate(self.clean_for_tts(llm_output), self.VOICE)
+        communicate.save_sync("tts/output.wav")
 
     def play_wav_nonblocking(self, path = "tts/output.wav"):
         data, samplerate = sf.read(path)
@@ -126,25 +121,17 @@ class TTS:
             if sentence is None:
                 break
 
-            sentence = self.clean_for_tts(sentence)
+            # synth to wav
+            communicate = edge_tts.Communicate(sentence, self.VOICE)
+            communicate.save_sync("tts/output.wav")
 
-            buffer = io.BytesIO()
+            # load wav to pcm
+            data, samplerate = sf.read("tts/output.wav", dtype="int16")
 
-            with wave.open(buffer, "wb") as wav_file:
-                self.voice.synthesize_wav(sentence, wav_file)
-
-            # rewind buffer
-            buffer.seek(0)
-
-            data, sr = sf.read(buffer, dtype="int16")
-
-            self.sample_rate = sr
-            pcm = data
-
-            self.audio_queue.put(pcm)
+            self.sample_rate = samplerate
+            self.audio_queue.put(data)
 
         self.audio_queue.put(None)
-
 
     # -----------------------------------------------------------
     # BACKGROUND: audio playback worker
@@ -154,53 +141,7 @@ class TTS:
             pcm = self.audio_queue.get()
 
             if pcm is None:
-                sd.wait()
                 break
 
             sd.play(pcm, samplerate=self.sample_rate)
             sd.wait()
-
-    # -----------------------------------------------------------
-    # PUBLIC: Push streaming text (this is called from LLM loop)
-    # -----------------------------------------------------------
-    def push_text(self, text_chunk):
-        """
-        Accept raw delta tokens from the LLM
-        and convert them into full sentences.
-        """
-
-        if not text_chunk:
-            return
-
-        self.buffer += text_chunk
-
-        # If a sentence boundary exists → flush one full sentence
-        if self.boundary.search(self.buffer):
-            sentences = re.split(r"([.!?;:\n])", self.buffer)
-
-            # Combine pairs: ["Hello", ".", " How are", "?", " ..."]
-            combined = []
-            for i in range(0, len(sentences) - 1, 2):
-                combined.append(sentences[i] + sentences[i+1])
-
-            # Send complete sentences to TTS
-            for s in combined:
-                clean = s.strip()
-                if clean:
-                    self.text_queue.put(clean)
-
-            # Keep the leftover partial sentence
-            self.buffer = sentences[-1]
-
-    # -----------------------------------------------------------
-    # PUBLIC: call at the end to flush leftover text
-    # -----------------------------------------------------------
-    def finish(self):
-        leftover = self.buffer.strip()
-        if leftover:
-            self.text_queue.put(leftover)
-
-        self.buffer = ""
-
-        self.text_queue.put(None)
-        self.running = False

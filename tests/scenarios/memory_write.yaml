@@ -1,0 +1,14 @@
+# tests/scenarios/memory_write.yaml
+name: "Memory write sanity test"
+
+steps:
+  - user: "My favourite color is blue"
+    expect:
+      logs_contain:
+        # - "save_memory"
+        # - "UPSERT OK"
+        - "AsyncMemoryWriteMiddleware fired"
+        - "MEMORY CANDIDATE"
+      no_errors: true
+      tools_called_contain:
+          - "save_memory"

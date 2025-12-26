@@ -1,0 +1,8 @@
+name: "Get temperature sanity test"
+steps:
+  - user: "what's the room temperature?"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "get_temperature"

@@ -1,0 +1,8 @@
+name: "Fetch and parse sanity test"
+steps:
+  - user: "fetch this url and parse it https://google.com"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "fetch_and_parse"

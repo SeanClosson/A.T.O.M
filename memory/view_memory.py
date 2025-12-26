@@ -3,8 +3,8 @@ import json
 import os
 
 # ⚠️ MUST MATCH YOUR REAL MEMORY PATH
-CHROMA_PATH = "memory_store"    # change if yours is different
-COLLECTION_NAME = "jarvis_memory"  # must match exactly
+CHROMA_PATH = "./atom_db"    # change if yours is different
+COLLECTION_NAME = "atom"  # must match exactly
 
 print("📂 CHROMA PATH IN VIEWER:", os.path.abspath(CHROMA_PATH))
 

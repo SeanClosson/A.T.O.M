@@ -1,0 +1,8 @@
+name: "Quadruped dance sanity test"
+steps:
+  - user: "make the spider bot dance"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "dance_quadruped"

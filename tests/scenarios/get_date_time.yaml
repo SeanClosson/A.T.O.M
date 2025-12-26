@@ -1,0 +1,8 @@
+name: "Get date time sanity test"
+steps:
+  - user: "what's the time right now?"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "get_date_time"

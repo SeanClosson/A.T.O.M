@@ -1,0 +1,8 @@
+name: "Convert currency sanity test"
+steps:
+  - user: "convert 100 usd to inr"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "convert_currency"

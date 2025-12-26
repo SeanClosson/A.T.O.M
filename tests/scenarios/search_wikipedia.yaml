@@ -1,0 +1,8 @@
+name: "Search wikipedia sanity test"
+steps:
+  - user: "wikipedia search for India"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "search_wikipedia"

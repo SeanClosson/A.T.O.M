@@ -5,8 +5,14 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 from datetime import datetime
+import yaml
 
 console = Console()
+
+with open("config.yaml", "r") as file:
+    config = yaml.safe_load(file) or {}
+
+user_id = config["USER_ID"]
 class CLIStreamer:
     def __init__(self, llm):
         self.llm = llm
@@ -23,18 +29,20 @@ class CLIStreamer:
         generated = ""
 
         with Live(refresh_per_second=40) as live:
-            for chunk in self.llm.generate_chunks(user_input):
+            for chunk in self.llm.generate_chunks(user_input, user_id):
                 if not chunk:
                     continue
 
                 # delta logic
-                if chunk.startswith(last_text):
-                    delta = chunk[len(last_text):]
-                else:
-                    delta = chunk
+                # if chunk.startswith(last_text):
+                #     delta = chunk[len(last_text):]
+                # else:
+                #     delta = chunk
 
-                last_text = chunk
-                generated += delta
+                # last_text = chunk
+                # generated += delta
+
+                generated += chunk
 
                 # Render assistant response live
                 md = Markdown(generated)
@@ -61,7 +69,7 @@ class CLIStreamer:
         last_text = ""
         generated = ""
 
-        for chunk in self.llm.generate_chunks(user_input):
+        for chunk in self.llm.generate_chunks(user_input, user_id):
             if not chunk:
                 continue
 
@@ -90,13 +98,10 @@ class CLIStreamer:
         generated = ""     # final output buffer
         partial = ""       # used for markdown blocks
 
-        for chunk in self.llm.generate_chunks(user_input):
+        for chunk in self.llm.generate_chunks(user_input, user_id):
             if not chunk:
                 continue
 
-            # --- REAL DELTA EXTRACTION (bulletproof) ---
-            # Remove the common prefix between old and new chunk.
-            # This gives you ONLY the new text the model generated.
             i = 0
             max_len = min(len(previous), len(chunk))
             while i < max_len and previous[i] == chunk[i]:

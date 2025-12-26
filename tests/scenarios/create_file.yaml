@@ -1,0 +1,8 @@
+name: "Create file sanity test"
+steps:
+  - user: "create a file named test.txt and put 'hello world' in it"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "create_file"

@@ -1,0 +1,8 @@
+name: "List timers sanity test"
+steps:
+  - user: "list all timers"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "list_timers"

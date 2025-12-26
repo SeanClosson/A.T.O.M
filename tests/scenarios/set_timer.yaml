@@ -1,0 +1,8 @@
+name: "Set timer sanity test"
+steps:
+  - user: "set a timer for 10 seconds"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "set_timer"

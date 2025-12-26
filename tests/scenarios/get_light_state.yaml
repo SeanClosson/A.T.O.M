@@ -1,0 +1,8 @@
+name: "Get light state sanity test"
+steps:
+  - user: "is the light on?"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "get_light_state"

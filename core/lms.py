@@ -1,7 +1,6 @@
 import lmstudio as lms
 import yaml
 from pathlib import Path
-import time
 
 class LMSTUDIO():
     def __init__(self, config_file="config.yaml"):
@@ -47,9 +46,9 @@ class LMSTUDIO():
     def load_model(self):
         self.model = self.client.llm.load_new_instance(self.config['LLM']['MODEL_NAME'], 
                              config={
-                                 'contextLength': 8192,
+                                 'contextLength': 12000,
                                  'gpu':{
-                                    'ratio': 0.85
+                                    'ratio': 0.84
                                  },
                              })
         

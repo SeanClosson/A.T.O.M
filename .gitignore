@@ -199,3 +199,10 @@ tools/system_monitor.py
 tts/en_US-lessac-medium.onnx
 tts/en_US-lessac-medium.onnx.json
 prompt.txt
+atom_logs.json
+atom_db/
+stt/vosk-model-small-en-us-0.15
+tts/output.wav
+tests/other_scenarios
+tests/reports
+plan.txt

@@ -1,0 +1,8 @@
+name: "Retrieve memories sanity test"
+steps:
+  - user: "recall my memories"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "retrieve_memories"

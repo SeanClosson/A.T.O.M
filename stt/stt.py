@@ -22,7 +22,8 @@ class STT:
             try:
                 self.recorder_realtime = RealtimeSTT.AudioToTextRecorder(
                     model="tiny.en",
-                    realtime_model_type="tiny.en",
+                    # realtime_model_type="tiny.en",
+                    realtime_model_type='base.en',
                     language="en",
                     enable_realtime_transcription=True,
                     # on_realtime_transcription_update=on_partial,

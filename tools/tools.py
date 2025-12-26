@@ -4,26 +4,178 @@ from tools.wikipedia_search import WikipediaSearcher
 from tools.timer import TimerManager
 from tools.camera import Camera
 from robots.spider_bot import SPIDER
+from robots.robotic_arm import RoboticArm
+from langchain_community.utilities import SearxSearchWrapper
+from memory.memory_tool import retrieve_memory, write_memory_tool_async
+import yaml
+from tests.harness import tool_log
+
+with open('config.yaml', "r") as file:
+    config = yaml.safe_load(file) or {}
 
 ha_wrapper = HomeAssistant()
+search = SearxSearchWrapper(searx_host=config['SEARXNG_URL'])
 tm = TimerManager()
 quadruped = SPIDER()
+
+if config["ROBOTIC_ARM"]:
+    try:
+        robotarm = RoboticArm()
+    except Exception as e:
+        print(f"[WARN] Failed to connect to Robotic Arm: {e}")
+        print("🤖 Robotic Arm disabled")
+        robotarm = None
+else:
+    robotarm = None
+    print("🤖 Robotic Arm disabled")
+
+def close_connections():
+    """Ends connections to robots and other resources."""
+    try:
+        quadruped.close_connection()
+    except Exception:
+        pass
+
+    try:
+        robotarm.robot_control.close_connection()
+    except Exception:
+        pass
+
+@tool
+def move_robotic_arm(x: float, y: float, z: float, speed: int = 50) -> str:
+    """
+    Move the robotic arm to specified (x, y, z) coordinates at given speed.
+
+    Parameters
+    ----------
+    x : float
+        X coordinate in cm. (0 to 20)
+    y : float
+        Y coordinate in cm. (0 to 20)
+    z : float
+        Z coordinate in cm. (0 to 24)
+    speed : int, optional
+        Speed of movement (default is 50).
+
+    Returns
+    -------
+    str
+        Confirmation message with target coordinates.
+    """
+    if config["ROBOTIC_ARM"]:
+        try:
+            response = robotarm.move_to(x, y, z, speed)
+            tool_log.record_tool_call("move_robotic_arm", {"response": response})
+            return response
+        except:
+            response = 'Movement failed to execute'
+            tool_log.record_tool_call("move_robotic_arm", {"response": response})
+            return response
+        
+    else:
+        return "Robotic arm disabled in config.yaml file."
+
+@tool
+def draw_circle_robot_arm(radius: int, cycles: int, center: tuple) -> str:
+    """
+    Instruct the robotic arm to draw a circle of given radius on specified plane.
+    Parameters
+    ----------
+    radius : int
+        Radius of the circle in cm.
+    cycles : int
+        Number of complete circles to draw.
+    center : tuple
+        Center point (x, y, z) of the circle in cm.    
+        Safe value (16,6,4)
+    Returns
+    -------
+    str
+        Confirmation message after drawing the circle.
+    """
+    if config["ROBOTIC_ARM"]:
+        try:
+            robotarm.draw_circle(
+                center=center, radius=radius, plane="XY", cycles=cycles
+            )
+            response = "Robotic arm has drawn a circle."
+            tool_log.record_tool_call("draw_circle_robot_arm", {"response": response})
+            return response
+        except:
+            response = 'Movement failed to execute'
+            tool_log.record_tool_call("draw_circle_robot_arm", {"response": response})
+            return response
+    else:
+        return "Robotic arm disabled in config.yaml file."
+
+@tool
+def draw_rectangle_robot_arm(center: tuple, width: float, height: float) -> str:
+    """
+    Instruct the robotic arm to draw a rectangle of given width and height on specified plane.
+    Parameters
+    ----------
+    center : tuple
+        Center point (x, y, z) of the rectangle in cm.
+        Safely value (6,4,12)
+    width : float
+        Width of the rectangle in cm.
+    height : float
+        Height of the rectangle in cm.
+
+    Returns
+    -------
+    str
+        Confirmation message after drawing the rectangle.
+    """
+    if config["ROBOTIC_ARM"]:
+        try:
+            robotarm.draw_rectangle(
+            center=center,
+            width=width,
+            height=height,
+            plane="XZ"
+            )
+            response = "Robotic arm has drawn a rectangle."
+            tool_log.record_tool_call("draw_rectangle_robot_arm", {"response": response})
+            return response
+        except:
+            response = 'Movement failed to execute'
+            tool_log.record_tool_call("draw_rectangle_robot_arm", {"response": response})
+            return response
+        
+    else:
+        return "Robotic arm disabled in config.yaml file."
+
+@tool
+def search_web(query: str):
+    """
+    Perform a web search and return a brief summary of results based on a searched query using SearXNG search engine.
+    """
+    response = search.run(query)
+    tool_log.record_tool_call("search_web", {"response": response})
+    return response
 
 @tool
 def greet_user() -> str:
     """Greet the user through the Spider bot Quadruped robot."""
-    return quadruped.greet()
+    response = quadruped.greet()
+    tool_log.record_tool_call("greet_user", {"response": response})
+    return response
 
 @tool
 def dance_quadruped(dance_number: int) -> str:
     """Make the quadruped dance. Can be used to express happiness. Dance_number should be 1,2 or 3."""
-    return quadruped.dance(dance_number=dance_number)
+    response = quadruped.dance(dance_number=dance_number)
+    tool_log.record_tool_call("dance_quadruped", {"response": response})
+    return response
 
 @tool
 def get_temperature() -> str:
     """Retrieves the current room temperature from Home Assistant."""
     try:
-        return ha_wrapper.get_temperature()
+        response = ha_wrapper.get_temperature()
+        tool_log.record_tool_call("get_temperature", {"response": response})
+        return response
     except Exception as e:
         return f"[ERROR] Failed to get temperature: {e}"
 
@@ -31,7 +183,9 @@ def get_temperature() -> str:
 def get_humidity() -> str:
     """Retrieves the current room humidity from Home Assistant."""
     try:
-        return ha_wrapper.get_humidity()
+        response = ha_wrapper.get_humidity()
+        tool_log.record_tool_call("get_humidity", {"response": response})
+        return response
     except Exception as e:
         return f"[ERROR] Failed to get humidity: {e}"
 
@@ -48,7 +202,11 @@ def toggle_wled(query: str) -> str:
     
     """
     try:
-        return ha_wrapper.ensure_wled_state(desired_state=query)
+        response = ha_wrapper.ensure_wled_state(desired_state=query)
+        tool_log.record_tool_call("toggle_wled", {"response": response})
+        # print("TOOL     TOOL_LOG =", id(tool_log.TOOL_CALL_LOG))
+        # print("Memory tool recorded")
+        return response
     except Exception as e:
         return f"[ERROR] Failed to toggle WLED: {e}"
 
@@ -56,7 +214,9 @@ def toggle_wled(query: str) -> str:
 def get_light_state() -> str:
     """Checks the current state of the WLED light (on/off)."""
     try:
-        return ha_wrapper.get_light_state()
+        response = ha_wrapper.get_light_state()
+        tool_log.record_tool_call("get_light_state", {"response": response})
+        return response
     except Exception as e:
         return f"[ERROR] Failed to get light state: {e}"
 
@@ -68,7 +228,9 @@ def set_timer(duration: int, task_name: str) -> str:
     try:
         tm.set_timer(duration, task_name, tm.alert)
         timers = tm.list_timers()
-        return {"Active timers": timers}
+        response = {"Active timers": timers}
+        tool_log.record_tool_call("set_timer", {"response": response})
+        return response
     except Exception as e:
         return f"[ERROR] Failed to set timer '{task_name}': {e}"
 
@@ -79,7 +241,9 @@ def cancel_timer(task_name: str) -> str:
     """
     try:
         tm.cancel_timer(task_name)
-        return f"Timer '{task_name}' canceled successfully."
+        response = f"Timer '{task_name}' canceled successfully."
+        tool_log.record_tool_call("cancel_timer", {"response": response})
+        return response
     except Exception as e:
         return f"[ERROR] Failed to cancel timer '{task_name}': {e}"
 
@@ -90,7 +254,9 @@ def list_timers() -> str:
     """
     try:
         timers = tm.list_timers()
-        return str({"Active timers": timers})
+        response = str({"Active timers": timers})
+        tool_log.record_tool_call("list_timers", {"response": response})
+        return response
     except Exception as e:
         return f"[ERROR] Failed to list timers: {e}"
 
@@ -147,6 +313,7 @@ def get_date_time() -> str:
             "date": now.strftime("%Y-%m-%d"),
             "time": now.strftime("%H:%M:%S"),
         }
+        tool_log.record_tool_call("get_date_time", {"response": result})
         return str(result)
     except Exception as e:
         return f"[ERROR] Failed to get date/time: {e}"
@@ -158,6 +325,7 @@ def extract_from_json(_) -> str:
     with open("data.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
+    tool_log.record_tool_call("extract_from_json", {"response": data})
     return data
 
 @tool
@@ -172,22 +340,27 @@ def create_file(name: str, content: str) -> str:
         dest_path.write_text(content, encoding="utf-8")
     except Exception as exc:
         return "Error: {exc!r}"
+    tool_log.record_tool_call("create_file", {"response": "File created."})
     return "File created."
 
 @tool
 def web_search(query: str) -> str:
     """
+    Use this if search_web fails.
     Perform a web search and return a brief summary of results based on a searched query using DuckDuckGo search engine.
     """
     from langchain_community.tools import DuckDuckGoSearchRun
 
     try:
        search = DuckDuckGoSearchRun()
-
-       return {'search_result': search.invoke(query)}
+       response = {'search_result': search.invoke(query)}
+       tool_log.record_tool_call("web_search", {"response": response})
+       return response
 
     except Exception as e:
-        return f"An unexpected error occurred during web search: {str(e)}"
+        response = f"An unexpected error occurred during web search: {str(e)}"
+        tool_log.record_tool_call("web_search", {"response": response})
+        return response
 
 @tool
 def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
@@ -270,11 +443,14 @@ def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
 
         # Build PDF
         doc.build(story)
-
-        return f"PDF successfully created at {filename}"
+        response = f"PDF successfully created at {filename}"
+        tool_log.record_tool_call("create_pdf", {"response": response})
+        return response
 
     except Exception as e:
-        return f"[ERROR] Unexpected failure: {e}"
+        response = f"[ERROR] Unexpected failure: {e}"
+        tool_log.record_tool_call("create_pdf", {"response": response})
+        return response
 
 @tool
 def search_wikipedia(query: str, full_page_content: bool):
@@ -305,9 +481,13 @@ def search_wikipedia(query: str, full_page_content: bool):
     searcher = WikipediaSearcher(user_agent="my-custom-ai-agent/1.0")
 
     if full_page_content:
-        return {"Full Page Content": searcher.search_full_page(query)}
+        response = {"Full Page Content": searcher.search_full_page(query)}
+        tool_log.record_tool_call("search_wikipedia", {"response": response})
+        return response
     else:
-        return {"Summary": searcher.search_summary(query)}
+        response = {"Summary": searcher.search_summary(query)}
+        tool_log.record_tool_call("search_wikipedia", {"response": response})
+        return response
 
 @tool
 def get_weather(city: str) -> dict:
@@ -445,7 +625,7 @@ def get_weather(city: str) -> dict:
         code = current.get("weathercode")
         desc = WEATHER_CODES.get(code, "Unknown weather")
 
-        return {
+        response = {
             "city": location.get("name", city),
             "latitude": lat,
             "longitude": lon,
@@ -455,8 +635,12 @@ def get_weather(city: str) -> dict:
             "description": desc,
             "raw": weather_data,
         }
+        tool_log.record_tool_call("get_weather", {"response": response})
+        return response
     except Exception as e:
-        return {"error": f"Failed to format weather data: {e}"}
+        response = {"error": f"Failed to format weather data: {e}"}
+        tool_log.record_tool_call("get_weather", {"response": response})
+        return response
 
 @tool
 def geocode_city(city: str) -> dict:
@@ -495,7 +679,7 @@ def geocode_city(city: str) -> dict:
 
         loc = data["results"][0]
 
-        return {
+        response = {
             "city": loc["name"],
             "country": loc.get("country"),
             "latitude": loc["latitude"],
@@ -503,70 +687,128 @@ def geocode_city(city: str) -> dict:
             "raw": data
         }
 
+        tool_log.record_tool_call("geocode_city", {"response": response})
+        return response
+
     except Exception as e:
-        return {"error": f"Failed to fetch geolocation: {str(e)}"}
+        response = {"error": f"Failed to fetch geolocation: {str(e)}"}
+        tool_log.record_tool_call("geocode_city", {"response": response})
+        return response
 
 @tool
 def convert_currency(amount: float, from_currency: str, to_currency: str) -> dict:
     """
-    Convert currency using European Central Bank's free exchange rates (no API key required).
-
-    Parameters
-    ----------
-    amount : float
-        Monetary amount to convert.
-    from_currency : str
-        Source currency code (e.g., 'USD').
-    to_currency : str
-        Target currency code (e.g., 'EUR').
+    Convert currency using exchangerate.host with retries and fallback.
 
     Returns
     -------
     dict
-        Dictionary containing converted amount and exchange rates.
-        Returns an error dict if currencies are invalid or request fails.
-
-    Notes
-    -----
-    - API: https://api.exchangerate.host/latest
-    - All rates are relative to EUR internally.
+        {
+            "success": True/False,
+            "amount": float,
+            "from": "USD",
+            "to": "INR",
+            "converted_amount": float,
+            "rate_used": float,
+            "date": "YYYY-MM-DD",
+            "error": Optional[str]
+        }
     """
 
     import requests
+    import time
 
-    from_currency = from_currency.upper()
-    to_currency = to_currency.upper()
+    def safe_log(payload):
+        try:
+            tool_log.record_tool_call("convert_currency", payload)
+        except Exception:
+            pass
 
-    url = "https://api.exchangerate.host/latest"
-
+    # Normalize
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        amount = float(amount)
+    except Exception:
+        resp = {"success": False, "error": "Amount must be numeric"}
+        safe_log(resp)
+        return resp
+
+    from_currency = str(from_currency).upper()
+    to_currency = str(to_currency).upper()
+
+    if len(from_currency) != 3 or len(to_currency) != 3:
+        resp = {"success": False, "error": "Currency codes must be 3-letter ISO format"}
+        safe_log(resp)
+        return resp
+
+    # Primary endpoint
+    convert_url = (
+        f"https://api.exchangerate.host/convert"
+        f"?from={from_currency}&to={to_currency}&amount={amount}"
+    )
+
+    # Retry logic
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        try:
+            r = requests.get(convert_url, timeout=8)
+            r.raise_for_status()
+            data = r.json()
+
+            if not data.get("success", False):
+                raise Exception("API returned failure")
+
+            result = {
+                "success": True,
+                "amount": amount,
+                "from": from_currency,
+                "to": to_currency,
+                "converted_amount": round(data["result"], 4),
+                "rate_used": data["info"]["rate"],
+                "date": data.get("date"),
+            }
+            safe_log(result)
+            return result
+
+        except Exception as e:
+            if attempt == attempts:
+                break
+            time.sleep(0.7 * attempt)
+
+    # ---------- FALLBACK ----------
+    # If /convert fails, fallback to /latest
+    try:
+        latest = requests.get(
+            "https://api.exchangerate.host/latest", timeout=8
+        )
+        latest.raise_for_status()
+        data = latest.json()
 
         rates = data.get("rates", {})
-        if not rates:
-            return {"error": "Failed to load exchange rates"}
-
-        if from_currency not in rates:
-            return {"error": f"Unknown source currency: {from_currency}"}
-
-        if to_currency not in rates:
-            return {"error": f"Unknown target currency: {to_currency}"}
+        if not rates or from_currency not in rates or to_currency not in rates:
+            raise Exception("Rates unavailable")
 
         eur_value = amount / rates[from_currency]
         converted = eur_value * rates[to_currency]
 
-        return {
+        result = {
+            "success": True,
             "amount": amount,
             "from": from_currency,
             "to": to_currency,
             "converted_amount": round(converted, 4),
             "rate_used": rates[to_currency] / rates[from_currency],
+            "date": data.get("date"),
         }
+        safe_log(result)
+        return result
 
     except Exception as e:
-        return {"error": f"Conversion failed: {str(e)}"}
+        resp = {
+            "success": False,
+            "error": f"Currency conversion failed after retries: {str(e)}",
+        }
+        safe_log(resp)
+        return resp
 
 @tool
 def ip_geolocation(ip_address: str = "") -> dict:
@@ -614,6 +856,7 @@ def ip_geolocation(ip_address: str = "") -> dict:
             return {"error": f"IP lookup failed: {str(e)}"}
 
     _ip_cache[ip_address] = data
+    tool_log.record_tool_call("ip_geolocation", {"response": data})
     return data
 
 @tool
@@ -654,15 +897,20 @@ def fetch_and_parse(url: str) -> dict:
             script.extract()
         text = " ".join(soup.get_text(separator=" ").split())
 
-        return {
+        response = {
             "url": url,
             "title": title,
             "text": text,
             "raw_html": res.text
         }
 
+        tool_log.record_tool_call("fetch_and_parse", {"response": response})
+        return response
+
     except Exception as e:
-        return {"error": f"Web scraping failed: {str(e)}"}
+        response = {"error": f"Web scraping failed: {str(e)}"}
+        tool_log.record_tool_call("fetch_and_parse", {"response": response})
+        return response
     
 @tool
 def calculate(expression: str) -> dict:
@@ -691,10 +939,44 @@ def calculate(expression: str) -> dict:
 
     try:
         result = eval(expression, {"__builtins__": {}}, safe_namespace)
+        tool_log.record_tool_call("calculate", {"response": result})
         return {"expression": expression, "result": result}
 
     except Exception as e:
-        return {"error": f"Calculation failed: {str(e)}"}
+        response = {"error": f"Calculation failed: {str(e)}"}
+        tool_log.record_tool_call("calculate", {"response": response})
+        return response
+
+@tool
+def retrieve_memories(query: str) -> str:
+    """
+    Retrieve relevant long-term memory from Chroma.
+    Returns a short compressed memory block or empty string.
+    """
+    response = retrieve_memory(query=query)
+    tool_log.record_tool_call("retrieve_memories", {"response": response})
+    return response
+
+@tool
+def save_memory(memory_text: str) -> str:
+    """
+    Asynchronously process and store long-term memory using a judge LLM.
+
+    Flow (non-blocking):
+    - Always treat incoming memory as valid
+    - Search for similar existing memories
+    - Ask judge LLM to decide:
+        - add_new          -> store as separate memory
+        - update_existing  -> replace an existing memory
+        - skip             -> do nothing
+    - Apply DB changes in the background
+    - Tool returns immediately
+    """
+    response = write_memory_tool_async.invoke({
+        "memory_text": memory_text
+    })
+    tool_log.record_tool_call("save_memory", {"memory_text": response})
+    return response
 
 tools = [get_temperature,
          get_date_time,
@@ -703,6 +985,7 @@ tools = [get_temperature,
          get_light_state,
          create_file,
          web_search,
+         search_web,
          create_pdf,
          search_wikipedia,
          set_timer,
@@ -716,5 +999,10 @@ tools = [get_temperature,
          calculate,
          capture_and_analyze_photo,
          greet_user,
-         dance_quadruped
+         dance_quadruped,
+         retrieve_memories,
+         save_memory,
+         move_robotic_arm,
+         draw_circle_robot_arm,
+         draw_rectangle_robot_arm
         ]

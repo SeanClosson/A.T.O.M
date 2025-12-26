@@ -1,307 +1,429 @@
-# A.T.O.M 
+# 🧠 A.T.O.M
+<p align="center">
+  <img src="./assets/atom_showcase.png" width="650" />
+</p>
 
-### *A Modular Local AI Assistant for Voice Interaction, Automation & Computer Vision*
+<p align="center">
+  <b>A.T.O.M — Local AI Assistant with Real Memory, Tools, and Robotics</b>
+</p>
+
+### **Autonomous Tool-Orchestrating Operation Machine**
+
+*A Local AI Assistant with Real Memory, Robotics, and Cognitive Architecture*
 
 ---
 
-## 📘 Overview
+## 🚀 Overview
 
-**ATOM (Autonomous Tool-Orchestrating Operation Machine)** is a modular, local AI assistant designed to provide natural language interaction, execute structured tasks through tool-based function calling, perform basic image analysis, and interface with physical robotic devices.
+**ATOM** is a **modular, local-first AI assistant** designed to behave less like a chatbot and more like an **operating system for intelligence**.
+It supports **voice interaction**, **vision**, **physical robotics control**, **tool-based reasoning**, **semantic long-term memory**, and **autonomous background cognition** — all running locally.
 
-The system emphasizes:
+Unlike cloud assistants, ATOM is built with:
 
-* modularity,
-* privacy,
-* robustness,
-* and real-world functionality.
+* **Privacy by design** → everything runs locally
+* **Reliability over gimmicks** → robust system engineering
+* **Modularity & extensibility** → components can be swapped
+* **Cognitive realism** → selective memory, async consolidation, and deliberate recall
+* **Real-world embodiment** → controls physical robotic devices
 
-ATOM currently uses **RealtimeSTT** (terminal-only speech input) and runs on **Qwen/Qwen3-VL-4B locally through LM Studio** as the primary language model backend.
+ATOM is not a demo chatbot.
+It’s a **personal AI system**.
 
-<br>
+## 🌍 Why ATOM Exists
 
-# ⚙️ Current Capabilities
+* Cloud AI = privacy risk
+* Humans need **local, reliable, embodied intelligence**
+  
+  ATOM exists to build that future.
 
-### 🎤 Speech Processing
+# ✨ Core Capabilities
+
+### 🎤 Speech & Interaction
 
 * Real-time streaming speech recognition (RealtimeSTT)
-* Terminal-only STT interface *(not integrated into Streamlit UI yet)*
-* Command and task invocation
+* Configurable voice synthesis:
+
+  * **Edge-TTS** *(toggle in config)*
+  * fallback **Piper-TTS**
+* CLI + Streamlit UI
+* Tool calling with narration for human-like interaction
+
+## 🔐 Privacy Note — Edge-TTS
+
+ATOM supports two Text-to-Speech backends:
+
+- **Edge-TTS** (default toggle)
+- **Piper-TTS** (fully local)
+
+⚠️ **Important Privacy Notice**
+
+Edge-TTS sends text to Microsoft’s servers for synthesis.  
+If you care about full local privacy, disable Edge-TTS in `config.yaml` and ATOM will automatically fall back to Piper, which is completely offline.
+
+
+
+---
 
 ### 🧠 Local Language Model
 
-* Qwen Qwen3-VL-4B via LM Studio
-* Tool-calling enabled
-* Vision-capable model support
+* Runs entirely locally via **LM Studio**
+* Currently powered by **Qwen3-VL-4B**
+* Supports:
 
-> **Important:** If replacing the model, select a vision-capable model to maintain image analysis functionality.
+  * tool calling
+  * structured reasoning
+  * image understanding
+* Model is swappable (Keep in mind to choose a Vision-Capable model)
 
-### 🖼 Image Processing
+---
+
+### 🖼 Computer Vision
 
 * Live camera capture
-* Local image analysis pipeline
+* Local inference
 * Integrated tool: `capture_and_analyze_photo`
 
-### 🔊 Experimental Text-to-Speech
+---
 
-* Experimental Piper-based TTS integration
-* Local voice synthesis
-* CLI-triggered speech output
+### 🤖 Physical Robotics Control
 
-> **Note:** TTS is still experimental and may be unstable.
+ATOM has **real embodiment**.
 
-### 🤖 Physical Presence
+* Robotic arm integration
 
-ATOM provides limited physical embodiment through:
+  * move to XYZ coordinates
+  * draw shapes (including circles)
+  * supports IK-based control
+* Quadruped robot actions
+* Robotic greetings and gestures
 
-* robotic greetings
-* gesture actions
-* quadruped dance motion
+---
 
-### 🛠 Tool System
+### 🧩 Tool System
 
-Provided tools:
+ATOM includes a full tool orchestration layer.
+It can reason, call tools, receive results, and continue thinking.
 
+Includes utilities for:
+
+* Smart home
+* System monitoring
+* File management
+* Wikipedia / Web search
+* Weather & geolocation
+* Timers
+* PDF creation
+* and more…
+
+
+# 🧠 Long-Term Memory System
+
+ATOM features a **cognitive memory subsystem**, not just a log.
+It stores what *matters*, retrieves intelligently, and manages itself in the background.
+
+### ✅ Storage
+
+* Persistent **ChromaDB**
+* Structured factual memories
+* Metadata:
+
+  * type: project | goal | preference | skill | fact | concern
+  * importance (1–5)
+  * confidence
+  * tags
+* **Async memory saving**
+
+  * handled by a smaller model
+  * judges what to remember
+  * rejects irrelevant information
+  * zero latency impact
+
+---
+
+### 🔎 Retrieval & RAG-Style Injection
+
+* Semantic similarity search
+* Score-based filtering
+* Relevance thresholds
+* **Automatic memory injection every N turns (default = 10)**
+
+This enables ATOM to:
+
+* remember long-term goals
+* recall personal preferences
+* continue conversations weeks later
+* avoid hallucinating memory
+
+---
+
+### ⚙️ Memory Tools (LLM Callable)
+
+ATOM can explicitly **reason about memory when needed**, using on-demand tools:
+
+#### `save_memory`
+
+* deduplicates memories
+* updates evolving information
+* consolidates fragmented entries
+* maintains a clean and meaningful memory base
+
+#### `retrieve_memory`
+
+* semantic recall
+* importance & score filtering
+* structured output
+
+This gives ATOM **deliberate recall**, not just passive RAG.
+
+---
+
+### 🧠 Embedding System
+
+* Dedicated **local embedding server**
+* OpenAI-style API
+* Can run on another machine to offload workload
+* Makes memory scalable and portable
+
+
+# 🔊 Logging & Debugging
+
+* Full **JSON conversation logging**
+* Debug middleware
+* Token tracing
+* Harness testing environment
+
+
+# 🧪 Testing & Reliability
+
+ATOM includes a **scenario testing harness**:
+
+* predefined conversation scenarios
+* reproducible test runs
+* easy debugging workflow
+
+Robust AI systems need validation.
+ATOM has it.
+
+
+## 🏗️ Architecture Overview
+
+```mermaid
+flowchart TB
+
+%% =====================
+%% FRONTEND + INTERFACES
+%% =====================
+subgraph Frontend ["Interfaces & User Interaction"]
+    MIC[Realtime STT Microphone]
+    CLI[CLI Interface]
+    STREAMLIT[Streamlit Web UI]
+    EDGE[Piper / Edge-TTS Output]
+end
+
+%% =====================
+%% CORE SYSTEM
+%% =====================
+subgraph Core ["Core Assistant Engine"]
+    LLM[Qwen 4B via LM Studio<br/>Tool Calling + Vision]
+    TOOLS[Tool Execution Layer<br/>System + APIs + Robotics]
+    LOGGER[JSON Conversation Logger]
+end
+
+%% =====================
+%% MEMORY SYSTEM
+%% =====================
+subgraph Memory ["Long-Term Memory System"]
+    JUDGE[Background Judge Model<br/>Async Decision]
+    SAVE[save_memory Tool<br/>Dedup + Update + Consolidation]
+    RETRIEVE[retrieve_memory Tool<br/>Semantic Recall]
+end
+
+%% =====================
+%% STORAGE
+%% =====================
+subgraph Storage ["Knowledge Storage"]
+    EMBED[Local Embedding Server]
+    CHROMA[ChromaDB Persistent Store]
+end
+
+%% =====================
+%% ROBOTICS
+%% =====================
+subgraph Robotics ["Physical Embodiment"]
+    ARM[Robotic Arm<br/>XYZ + Drawing]
+    QUAD[Quadruped Robot]
+end
+
+%% =====================
+%% API SERVER
+%% =====================
+subgraph BackendAPI ["Backend API Layer"]
+    FASTAPI[FastAPI Server]
+end
+
+
+%% === CONNECTIONS ===
+
+%% INPUT PATHS
+MIC --> CLI --> LLM
+STREAMLIT --> FASTAPI --> LLM
+
+%% CORE ACTION
+LLM --> TOOLS
+LLM --> LOGGER
+LLM --> EDGE
+
+%% ROBOTICS
+TOOLS --> ARM
+TOOLS --> QUAD
+
+%% MEMORY WRITE PIPELINE
+LLM --> JUDGE --> SAVE --> EMBED --> CHROMA
+
+%% MEMORY RETRIEVAL PIPELINE
+LLM --> RETRIEVE
+RETRIEVE --> EMBED --> CHROMA --> RETRIEVE --> LLM
+
+%% PERIODIC RAG INJECTION
+CHROMA --> LLM
 ```
-get_temperature
-get_date_time
-get_humidity
-toggle_wled
-get_light_state
-create_file
-web_search
-create_pdf
-search_wikipedia
-set_timer
-list_timers
-cancel_timer
-get_weather
-geocode_city
-convert_currency
-ip_geolocation
-fetch_and_parse
-calculate
-capture_and_analyze_photo
-greet_user
-dance_quadruped
-```
 
-### 🗂 System Status
+# 🛡️ Design Principles
 
-* Experimental TTS now available
-* No wake word yet
-* No long-term memory
-* No calendar sync
-* No persistent storage layer
+* 🧠 **Cognitive realism** → AI that remembers *meaningfully*
+* 🔒 **Privacy-first** → fully local execution
+* ⚙️ **Modularity** → every subsystem swappable
+* 🏗 **Engineering discipline** → async pipelines, validation, logging
+* 🤖 **Real-world capability** → actually controls hardware
+* ⚡ **Performance-aware** → GPU/CPU load balancing
+* 🧪 **Testable** → harness + JSON logs
 
----
+# 💻 Platform & Performance
 
-<br>
+Tested on:
 
-# 🔭 Planned Development
+**Laptop (everything except LLM):**
 
-* wake word activation
-* expanded robotics integrations
-* Streamlit STT support
-* enhanced embodiment behavior
+* Intel i5-1145G7
+* Intel Iris Xe Graphics
+* 16GB RAM
 
----
+**Desktop (LLM host):**
 
-<br>
+* Ryzen 5 5600G @ 4.6 GHz
+* GTX 1650
+* 32GB RAM
 
-# 💻 Platform Notes
+Performance:
 
-This project has currently **only been tested under:**
+* ~24 tokens/sec
+* 12k context
+* GPU offload
+* Stable long sessions
 
-* **Arch Linux**
-* using **Conda** as the virtual environment manager
+## 🖥️ Hardware Requirements
 
-Other OS / environment configurations have not been evaluated yet.
+ATOM is designed to be practical on consumer hardware.
 
----
+**Recommended**
+- 16GB RAM+
+- NVIDIA GPU for local LLM inference
+- SSD storage
 
-<br>
-
-# 🛡️ Project Principles
-
-* local-first execution
-* reliability over quantity of features
-* incremental iteration
-* modular architecture
-* focus on practical real-world usage
-
----
-
-<br>
-
-# 🏗 System Architecture (Current)
-
-```
-┌─────────────────────────┐
-│  Microphone (Terminal)  │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│      RealtimeSTT        │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ LM Studio Backend (LLM) │
-│ Qwen3-VL-4B             │
-└───────────┬─────────────┘
-            │
-            ▼
-  Tool Execution Layer
-            ▼
-      System + APIs + Robotics
-```
-
----
-
-<br>
-
-# 🧰 Tech Stack
-
-| Component          | Technology         |
-| ------------------ | ------------------ |
-| Speech Recognition | RealtimeSTT        |
-| LLM Backend        | LM Studio          |
-| LLM Model          | `qwen/qwen3-vl-4b` |
-| UI                 | Streamlit          |
-| API Layer          | FastAPI            |
-| Robotics Interface | Python modules     |
-| TTS Engine         | Piper              |
-| PDF Engine         | reportlab          |
-| Web Parser         | BeautifulSoup      |
-
----
-<br>
-
-# 🎬 Demo Video
-
-YouTube Demo:
-
-👉 [A.T.O.M Demo Video (November 2025)
-](https://youtu.be/CzL6SG0E3HI)
-
-Laptop Specifications (Runs everything besides the LLM):
-
-- CPU: 11th Gen Intel(R) Core(TM) i5-1145G7 (8) @ 4.40 GHz
-- GPU: Intel Iris Xe Graphics @ 1.30 GHz [Integrated]
-- RAM: 16GB
-
-Desktop Specifications (Runs LM Studio):
-
-- CPU: AMD Ryzen 5 5600G (Overclocked to 4.6 GHz)
-- GPU: NVIDIA GTX 1650 (Slight Overclock)
-- RAM: 32 GB DDR4 3200 MHz
-
-Performance is around 30 tokens/second with my hardware. Token limit is set at 8k and 33 of 36 layers are offloaded to the GPU and all 6 threads of my CPU are allocated to LM Studio.
-
----
-
-<br>
+**Notes**
+- Components can be split across machines (e.g., LLM on desktop, rest on laptop)
+- Lightweight modes run on laptops without GPU
+- Robotics + memory + STT/TTS can run independently of LLM host
 
 # 📦 Installation
-
-### 1. Clone Repository
 
 ```bash
 git clone https://github.com/AtifUsmani/A.T.O.M
 cd A.T.O.M
-```
-
-### 2. Create Conda Environment
-
-*(ATOM has only been tested using Conda on Arch Linux)*
-
-```bash
-conda create -n atom python=3.13.9
+conda create -n atom python=3.13
 conda activate atom
-```
-
-### 3. Install Dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-For TTS:
+<!-- Download [Vosk](https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip) and extract it inside the [stt](./stt/) directory. -->
 
-```bash
-cd tts
-python3 -m piper.download_voices en_US-lessac-medium
-```
-
-### 4. Configure Application
-
-#### 4.1 Configure runtime parameters:
-
-Inside the project root, edit:
+Configure:
 
 ```
-example.yaml
-```
-
-Update the values.
-Then rename it to:
-
-```
-config.yaml
-```
-
-This file is read at startup.
-
-#### 4.2 Configure the system prompt
-
-Rename the template file:
-
-```
+example.yaml → config.yaml
 template.txt → prompt.txt
 ```
 
-Then edit `prompt.txt` to modify the system behavior / personality.
-
----
-
-### 5. Start ATOM
-
-To start ATOM in **command-line mode (with STT):**
+Start:
 
 ```bash
-python atom.py      # this starts ATOM in CLI
+python atom.py
 ```
 
-#### OR
-
-To start the **API & Web UI mode:**
+Web/API Mode:
 
 ```bash
 uvicorn api.server:app --reload
 streamlit run frontend/main.py
 ```
 
----
+Run `embedding_server.py` before ATOM.
 
-## 🔧 LM Studio Setup
+```bash
+python embedding/embedding_server.py
+```
 
-* install `qwen/qwen3-vl-4b`
-* load the model
-* start local inference server
-* enable function-calling
-* set the context length to at least 8,000 tokens for optimal stability
-
-> **Note:** lower token limits may degrade response reliability and tool execution consistency.
+‼️ Make sure your SearXNG instance has JSON format enabled in the settings.
 
 ---
 
-<br>
+# 🎥 Demo
 
-# 🎯 Usage Examples
+👉 [December Demo](https://youtu.be/EiwELGI6O9g)
 
-* “Search Wikipedia for Alan Turing.”
-* “Toggle WLED.”
-* “Analyze this photo.”
-* “Make the robot greet me.”
+---
 
+# 🧩 Tech Stack
+
+| Component  | Tech                          |
+| ---------- | ----------------------------- |
+| Speech     | [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT)                   |
+| LLM        | [LM Studio](https://lmstudio.ai/)                     |
+| Model      | [Qwen3-VL-4B](https://lmstudio.ai/models/qwen3-vl)                   |
+| Memory     | [ChromaDB](https://www.trychroma.com/)                      |
+| Embeddings | [Custom local embedding server](./embedding/embedding_server.py) |
+| UI         | [Streamlit](https://streamlit.io/)                     |
+| API        | [FastAPI](https://fastapi.tiangolo.com/)                       |
+| Web Search        | [SearXNG](https://github.com/searxng/searxng) / [DuckDuckGo](https://duckduckgo.com/)                       |
+| Robotics   | [Python control layer](./robots/)          |
+| Spider Bot   | [My Spider Bot Repo](https://github.com/AtifUsmani/Spider-bot)          |
+| Robotic Arm   | Coming Soon 🔜          |
+| PDF Creation   | [ReportLab](https://www.reportlab.com/)          |
+| Weather   | [Open-Meteo API](https://open-meteo.com/)          |
+| Home Automation   | [Home Assistant](https://www.home-assistant.io/)          |
+| TTS        | [Edge-TTS](https://github.com/rany2/edge-tts) / [Piper](https://github.com/OHF-Voice/piper1-gpl)              |
+
+## 🧪 Research Directions
+
+ATOM is not just a project — it is a platform for exploring:
+
+- **Long-term memory consolidation**
+  - relevance scoring
+  - semantic decay
+
+- **Privacy-preserving personal AI**
+  - local-only cognition
+  - distributed personal compute nodes
+
+- **Tool-centric cognitive planning**
+  - deliberate reasoning loops
+  - narration-aware tool execution
+
+- **Embodied AI**
+  - robotics grounding
+  - physical task execution
+
+- **Asynchronous cognition**
+  - background thinking
+  - delayed reasoning
+  - memory consolidation pipelines

@@ -1,0 +1,9 @@
+name: "Search web sanity test"
+steps:
+  - user: "search the web for Elon Musk"
+    expect:
+      no_errors: true
+      logs_contain: []
+      tools_called_contain:
+        - "search_web"
+        - "web_search"
