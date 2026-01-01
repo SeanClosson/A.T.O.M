@@ -1,7 +1,9 @@
 from stt.stt import STT
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from pydantic import BaseModel
+import base64
 
 router = APIRouter()
 
@@ -67,3 +69,35 @@ async def shutdown_stt_endpoint():
     await loop.run_in_executor(executor, stt.shutdown_stt)
 
     return {"status": "STT engine shut down"}
+
+class STTJsonRequest(BaseModel):
+    audio: str   # base64 or data URI
+
+
+@router.post("")
+async def stt_from_json(req: STTJsonRequest):
+    """
+    Accepts:
+        { "audio": "data:audio/wav;base64,AAAA..." }
+         or
+        { "audio": "AAAA..." }
+
+    Returns:
+        { "text": "...." }
+    """
+
+    try:
+        audio_str = req.audio
+
+        # Strip data URI header if present
+        if "," in audio_str:
+            audio_str = audio_str.split(",")[1]
+
+        audio_bytes = base64.b64decode(audio_str)
+
+        text = stt.transcribe_for_api(audio_bytes)
+
+        return {"text": text}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"STT failed: {e}")

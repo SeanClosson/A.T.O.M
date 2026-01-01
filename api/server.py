@@ -2,12 +2,13 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routers import chat, stream, stt, system, health, weather, boot_status, memory, tools, news, tts
+from api.routers import chat, stream, stt, system, health, weather, boot_status, memory, tools, news, tts, speech
 import signal
 import sys, yaml
 from tts.voice import set_voice_engine
 from tts.tts_edge import TTS as EdgeTTS
 from tts.tts_piper import TTS as PiperTTS
+from tts.voice import set_voice_engine
 
 with open("config.yaml", "r") as f:
     cfg = yaml.safe_load(f) or {}
@@ -32,6 +33,31 @@ with open("config.yaml", "r") as file:
 
 app = FastAPI(title="ATOM API", version="1.0")
 
+
+@app.on_event("startup")
+async def setup_tts():
+    try:
+        with open("config.yaml", "r") as f:
+            config = yaml.safe_load(f) or {}
+
+        USE_TTS = config.get("USE_TTS", False)
+        USE_EDGE_TTS = config.get("USE_EDGE_TTS", False)
+
+        if not USE_TTS:
+            print("TTS disabled in config.yaml")
+            return
+
+        if USE_EDGE_TTS:
+            from tts.tts_edge import TTS
+        else:
+            from tts.tts_piper import TTS
+
+        engine = TTS()
+        set_voice_engine(engine)
+        print("TTS READY 🎤")
+
+    except Exception as e:
+        print("FAILED TO INIT TTS ❌", e)
 
 @app.on_event("startup")
 def init_tts():
@@ -68,6 +94,7 @@ app.include_router(memory.router)
 app.include_router(tools.router)
 app.include_router(news.router)
 app.include_router(tts.router)
+app.include_router(speech.router)
 
 def graceful_exit(*args):
     print("\n\n[INFO] Shutting down ATOM...")

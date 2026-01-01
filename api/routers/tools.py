@@ -34,4 +34,22 @@ async def get_tools():
 
 @router.get("/tools/usage")
 def get_tool_usage():
-    return {"usage": get_tool_log()}
+    raw = get_tool_log()
+    usage = []
+
+    for entry in raw:
+        metadata = entry.get("metadata", {})
+
+        usage.append({
+            "tool": entry.get("tool", "unknown_tool"),
+            "metadata": {
+                "success": bool(metadata.get("success", True)),
+                "tags": metadata.get("tags", "General")
+            },
+            "timestamp": (
+                entry.get("timestamp")
+                or datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+            )
+        })
+
+    return { "usage": usage }

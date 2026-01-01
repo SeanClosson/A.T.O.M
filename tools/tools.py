@@ -150,49 +150,103 @@ def draw_rectangle_robot_arm(center: tuple, width: float, height: float) -> str:
 @tool
 def search_web(query: str):
     """
-    Perform a web search and return a brief summary of results based on a searched query using SearXNG search engine.
+    Perform a web search and return a brief summary of results
+    using the SearXNG search engine.
     """
-    response = search.run(query)
-    tool_log.record_tool_call("search_web", {"response": response})
-    return response
+    try:
+        # ✅ Successful tool execution log
+        tool_log.record_tool_call(
+            "search_web",
+            {
+                "tags": "Web Search",
+                "success": True
+            },
+            success=True
+        )
+        response = search.run(query)
+        return response
+
+    except Exception as e:
+        # ❌ Failure still logs so UI can animate if needed
+        tool_log.record_tool_call(
+            "search_web",
+            {
+                "tags": "Web Search",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
+
+        raise
 
 @tool
 def greet_user() -> str:
     """Greet the user through the Spider bot Quadruped robot."""
+    tool_log.record_tool_call(
+            "greet_user",
+            {
+                "tags": "System Control",
+                "success": True
+            },
+            success=True
+        )
     response = quadruped.greet()
-    tool_log.record_tool_call("greet_user", {"response": response})
     return response
 
 @tool
 def dance_quadruped(dance_number: int) -> str:
     """Make the quadruped dance. Can be used to express happiness. Dance_number should be 1,2 or 3."""
+    tool_log.record_tool_call(
+            "dance_quadruped",
+            {
+                "tags": "System Control",
+                "success": True
+            },
+            success=True
+        )
     response = quadruped.dance(dance_number=dance_number)
-    tool_log.record_tool_call("dance_quadruped", {"response": response})
     return response
 
 @tool
 def get_temperature() -> str:
     """Retrieves the current room temperature from Home Assistant."""
     try:
+        tool_log.record_tool_call(
+            "get_temperature",
+            {
+                "tags": "System Control",
+                "success": True,
+            },
+            success=True
+        )
         response = ha_wrapper.get_temperature()
-        tool_log.record_tool_call("get_temperature", {
-            "success": True,
-            "response": response
-        })
         return response
     except Exception as e:
-        tool_log.record_tool_call("get_temperature", {
-            "success": False,
-            "error": str(e)
-        })
+        tool_log.record_tool_call(
+            "get_temperature",
+            {
+                "tags": "System Control",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return f"[ERROR] Failed to get temperature: {e}"
 
 @tool
 def get_humidity() -> str:
     """Retrieves the current room humidity from Home Assistant."""
     try:
+        tool_log.record_tool_call(
+            "get_humidity",
+            {
+                "tags": "System Control",
+                "success": True,
+            },
+            success=True
+        )
         response = ha_wrapper.get_humidity()
-        tool_log.record_tool_call("get_humidity", {"response": response})
         return response
     except Exception as e:
         return f"[ERROR] Failed to get humidity: {e}"
@@ -210,22 +264,52 @@ def toggle_wled(query: str) -> str:
     
     """
     try:
+        tool_log.record_tool_call(
+            "toggle_wled",
+            {
+                "tags": "System Control",
+                "success": True,
+            },
+            success=True
+        )
         response = ha_wrapper.ensure_wled_state(desired_state=query)
-        tool_log.record_tool_call("toggle_wled", {"response": response})
-        # print("TOOL     TOOL_LOG =", id(tool_log.TOOL_CALL_LOG))
-        # print("Memory tool recorded")
         return response
     except Exception as e:
+        tool_log.record_tool_call(
+            "toggle_wled",
+            {
+                "tags": "System Control",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return f"[ERROR] Failed to toggle WLED: {e}"
 
 @tool
 def get_light_state() -> str:
     """Checks the current state of the WLED light (on/off)."""
     try:
+        tool_log.record_tool_call(
+            "get_light_state",
+            {
+                "tags": "System Control",
+                "success": True,
+            },
+            success=True
+        )
         response = ha_wrapper.get_light_state()
-        tool_log.record_tool_call("get_light_state", {"response": response})
         return response
     except Exception as e:
+        tool_log.record_tool_call(
+            "get_light_state",
+            {
+                "tags": "System Control",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return f"[ERROR] Failed to get light state: {e}"
 
 @tool
@@ -316,14 +400,30 @@ def get_date_time() -> str:
     """Returns the current date and time."""
     try:
         import datetime
+        tool_log.record_tool_call(
+            "get_date_time",
+            {
+                "tags": "System Control",
+                "success": True
+            },
+            success=True
+        )
         now = datetime.datetime.now()
         result = {
             "date": now.strftime("%Y-%m-%d"),
             "time": now.strftime("%H:%M:%S"),
         }
-        tool_log.record_tool_call("get_date_time", {"response": result})
         return str(result)
     except Exception as e:
+        tool_log.record_tool_call(
+            "get_date_time",
+            {
+                "tags": "System Control",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return f"[ERROR] Failed to get date/time: {e}"
 
 def extract_from_json(_) -> str:
@@ -348,7 +448,14 @@ def create_file(name: str, content: str) -> str:
         dest_path.write_text(content, encoding="utf-8")
     except Exception as exc:
         return "Error: {exc!r}"
-    tool_log.record_tool_call("create_file", {"response": "File created."})
+    tool_log.record_tool_call(
+            "create_file",
+            {
+                "tags": "System Control",
+                "success": True
+            },
+            success=True
+        )
     return "File created."
 
 @tool
@@ -362,12 +469,27 @@ def web_search(query: str) -> str:
     try:
        search = DuckDuckGoSearchRun()
        response = {'search_result': search.invoke(query)}
-       tool_log.record_tool_call("web_search", {"response": response})
+       tool_log.record_tool_call(
+            "web_search",
+            {
+                "tags": "Web Search",
+                "success": True
+            },
+            success=True
+        )
        return response
 
     except Exception as e:
         response = f"An unexpected error occurred during web search: {str(e)}"
-        tool_log.record_tool_call("web_search", {"response": response})
+        tool_log.record_tool_call(
+            "web_search",
+            {
+                "tags": "Web Search",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return response
 
 @tool
@@ -378,6 +500,15 @@ def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
     Saves the file inside the 'generated' folder.
     """
     import os
+
+    tool_log.record_tool_call(
+            "create_pdf",
+            {
+                "tags": "System Control",
+                "success": True
+            },
+            success=True
+        )
 
     # Ensure output directory exists
     output_dir = "generated"
@@ -452,12 +583,19 @@ def create_pdf(filename: str, title: str, content: str, table_data=None) -> str:
         # Build PDF
         doc.build(story)
         response = f"PDF successfully created at {filename}"
-        tool_log.record_tool_call("create_pdf", {"response": response})
         return response
 
     except Exception as e:
         response = f"[ERROR] Unexpected failure: {e}"
-        tool_log.record_tool_call("create_pdf", {"response": response})
+        tool_log.record_tool_call(
+            "create_pdf",
+            {
+                "tags": "System Control",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return response
 
 @tool
@@ -485,16 +623,31 @@ def search_wikipedia(query: str, full_page_content: bool):
     This function uses the `WikipediaSearcher` class with a custom user agent
     (`my-custom-ai-agent/1.0`) to perform the lookup.
     """
+    tool_log.record_tool_call(
+            "search_wikipedia",
+            {
+                "tags": "Web Search",
+                "success": True
+            },
+            success=True
+        )
 
     searcher = WikipediaSearcher(user_agent="my-custom-ai-agent/1.0")
 
     if full_page_content:
         response = {"Full Page Content": searcher.search_full_page(query)}
-        tool_log.record_tool_call("search_wikipedia", {"response": response})
         return response
     else:
         response = {"Summary": searcher.search_summary(query)}
-        tool_log.record_tool_call("search_wikipedia", {"response": response})
+        tool_log.record_tool_call(
+            "search_wikipedia",
+            {
+                "tags": "Web Search",
+                "success": False,
+                "error": str(e)
+            },
+            success=False
+        )
         return response
 
 @tool
@@ -961,8 +1114,15 @@ def retrieve_memories(query: str) -> str:
     Retrieve relevant long-term memory from Chroma.
     Returns a short compressed memory block or empty string.
     """
+    tool_log.record_tool_call(
+            "retrieve_memories",
+            {
+                "tags": "Memory",
+                "success": True
+            },
+            success=True
+        )
     response = retrieve_memory(query=query)
-    tool_log.record_tool_call("retrieve_memories", {"response": response})
     return response
 
 @tool
@@ -980,10 +1140,17 @@ def save_memory(memory_text: str) -> str:
     - Apply DB changes in the background
     - Tool returns immediately
     """
+    tool_log.record_tool_call(
+            "save_memory",
+            {
+                "tags": "Memory",
+                "success": True
+            },
+            success=True
+        )
     response = write_memory_tool_async.invoke({
         "memory_text": memory_text
     })
-    tool_log.record_tool_call("save_memory", {"memory_text": response})
     return response
 
 tools = [get_temperature,

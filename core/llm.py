@@ -18,6 +18,7 @@ from embedding.embedding_client import FastAPIEmbeddings
 from memory.chroma_store import get_chroma_store
 from memory.memory_injection import PeriodicJudgeMiddleware, JudgedMemoryInjectionMiddleware
 from tts.middleware import TTSMiddleware
+from tts.middleware_frontend import TTSMiddlewareFrontend
 
 # Load the prompt from a text file
 with open("prompt.txt", "r", encoding="utf-8") as f:
@@ -159,6 +160,7 @@ class LLM():
                     # debugger,
                     JSONLoggingMiddleware(output_file='atom_logs.json'),
                     TTSMiddleware(),
+                    # TTSMiddlewareFrontend(),
                     PeriodicJudgeMiddleware(self.summary_model, self.store, config['USER_ID'], 10),
                     JudgedMemoryInjectionMiddleware(config['USER_ID']),
                     trim_messages,
