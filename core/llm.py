@@ -159,8 +159,8 @@ class LLM():
                 middleware=[
                     # debugger,
                     JSONLoggingMiddleware(output_file='atom_logs.json'),
-                    TTSMiddleware(),
-                    # TTSMiddlewareFrontend(),
+                    TTSMiddleware(),           # <---Comment this for Web UI
+                    # TTSMiddlewareFrontend(),          <---Uncomment this for Web UI
                     PeriodicJudgeMiddleware(self.summary_model, self.store, config['USER_ID'], 10),
                     JudgedMemoryInjectionMiddleware(config['USER_ID']),
                     trim_messages,

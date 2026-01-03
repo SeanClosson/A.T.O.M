@@ -40,7 +40,7 @@ class TTSMiddlewareFrontend(AgentMiddleware):
                 "text": text
             })
 
-            print("🔥 SSE SPEAK:", text)
+            # print("🔥 SSE SPEAK:", text)
 
         except Exception as e:
             print("after_model SSE error:", e)

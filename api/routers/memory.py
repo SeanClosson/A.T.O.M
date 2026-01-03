@@ -7,6 +7,33 @@ router = APIRouter(
     tags=["Memory"]
 )
 
+def normalize_timestamp(ts):
+    if ts is None:
+        return datetime.utcnow()
+
+    # If timestamp is already datetime
+    if isinstance(ts, datetime):
+        return ts
+
+    # If timestamp is numeric (unix)
+    if isinstance(ts, (int, float)):
+        return datetime.fromtimestamp(ts)
+
+    # If ISO string / any string
+    if isinstance(ts, str):
+        try:
+            return datetime.fromisoformat(ts)
+        except:
+            try:
+                # fallback if stored weirdly
+                return datetime.utcfromtimestamp(float(ts))
+            except:
+                return datetime.utcnow()
+
+    # Fallback
+    return datetime.utcnow()
+
+
 @router.get("")
 async def get_recent_memory():
     try:
@@ -22,23 +49,26 @@ async def get_recent_memory():
         memory_items = []
 
         for doc, meta in zip(documents, metadatas):
-            timestamp = (
+            raw_ts = (
                 meta.get("timestamp")
                 or meta.get("time")
-                or datetime.utcnow().isoformat()
             )
+
+            ts = normalize_timestamp(raw_ts)
 
             memory_items.append({
                 "content": doc,
-                "timestamp": timestamp
+                "timestamp": ts.isoformat(), # return clean ISO
+                "_sort": ts                  # internal sort value
             })
 
-        # newest ➜ oldest
+        # sort newest → oldest
         memory_items.sort(
-            key=lambda x: x["timestamp"],
+            key=lambda x: x["_sort"],
             reverse=True
         )
 
+        # trim
         memory_items = memory_items[:15]
 
         return {"memory": memory_items}

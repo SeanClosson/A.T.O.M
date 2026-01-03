@@ -26,16 +26,11 @@ Unlike cloud assistants, ATOM is built with:
 * **Cognitive realism** → selective memory, async consolidation, and deliberate recall
 * **Real-world embodiment** → controls physical robotic devices
 
-ATOM is not a demo chatbot.
-It’s a **personal AI system**.
-
 ## 🌍 Why ATOM Exists
 
 * Cloud AI = privacy risk
 * Humans need **local, reliable, embodied intelligence**
   
-  ATOM exists to build that future.
-
 # ✨ Core Capabilities
 
 ### 🎤 Speech & Interaction
@@ -201,8 +196,91 @@ ATOM includes a **scenario testing harness**:
 * reproducible test runs
 * easy debugging workflow
 
-Robust AI systems need validation.
-ATOM has it.
+---
+## 🌌 Cinematic React UI (ATOM Interface)
+
+ATOM includes a **fully–interactive 3D cinematic interface** built with React + Next.js.
+Instead of a flat dashboard, ATOM is visualized as a **living system in space** — expressive, reactive, and immersive.
+
+<p align="center">
+  <img src="./assets/chat_preview.png" width="45%" />
+  <img src="./assets/animation_preview.png" width="45%" />
+</p>
+
+*Left: Focused chat view. Right: State-based planetary visualization during tool execution.*
+
+### 🎬 Experience
+
+The UI is designed to feel like a sci-fi assistant console:
+
+* **Central ATOM Core**
+
+  * a glowing planet–like core representing ATOM’s “mind”
+  * reacts dynamically to CPU usage, system load, and state
+  * subtle pulse / breathing animations to feel alive
+
+* **Orbiting Tool Planets**
+
+  * tools flare, glow, and animate when triggered
+
+* **Cinematic Camera Movement**
+
+  * smooth space-camera transitions
+  * automatically focuses on whichever type of tool ATOM is using
+  * creates a story-like “scene” for every interaction
+
+---
+
+## 🧭 Interface Panels
+
+Alongside the 3D space scene, the UI also provides functional control panels:
+
+* **Assistant View**
+
+  * chat + reasoning + responses
+* **System Health Panel**
+
+  * CPU / RAM / GPU load in realtime
+* **Weather + Environment Panel**
+* **News Feed**
+* **Tool Activity Visualizer**
+
+  * shows what tools ATOM is calling
+  * synchronizes with 3D planets
+
+---
+
+## 🖥️ UI Tech Highlights
+
+* **Next.js + React**
+* **React Three Fiber** for real-time 3D
+* **Tailwind + ShadCN UI** for panels & HUD
+* Realtime streaming integration with ATOM backend
+* Responsive + works fullscreen for immersive experience
+
+---
+
+## 🚀 Launching the UI
+
+For the Web UI, be sure to modify the core/llm.py file:
+
+<img src="./assets/web_instructions.png">
+
+From the `ATOM-UI` directory (See install instructions first):
+
+```bash
+npm run dev
+```
+
+Make sure the FastAPI backend is running.
+The UI will ask for ATOM’s API endpoints.
+
+⚠️ **Important Privacy Notice**
+
+Be sure to disable Next .js telemtry if you care about full local privacy.
+```bash
+npx next telemetry disable
+```
 
 
 ## 🏗️ Architecture Overview
@@ -215,30 +293,49 @@ flowchart TB
 %% =====================
 %% FRONTEND + INTERFACES
 %% =====================
-subgraph Frontend ["Interfaces & User Interaction"]
-    MIC[Realtime STT Microphone]
-    CLI[CLI Interface]
-    STREAMLIT[Streamlit Web UI]
-    EDGE[Piper / Edge-TTS Output]
+subgraph Frontend ["User Interfaces"]
+    NEXTUI[Next.js React UI<br/>Web ]
+    MICUI[Microphone Input + Voice UI]
+    VISUALS[Assistant View <br>Focused View<br/>• News • Weather • System Panels]
 end
+
+
+%% =====================
+%% API GATEWAY
+%% =====================
+subgraph FrontLayer ["Frontend API Layer"]
+    NEXTAPI[Next.js API Routes<br/>Proxy + UI Logic]
+end
+
+
+%% =====================
+%% BACKEND API SERVER
+%% =====================
+subgraph BackendAPI ["Backend Core API"]
+    FASTAPI[FastAPI Server<br/>Primary ATOM Backend]
+end
+
 
 %% =====================
 %% CORE SYSTEM
 %% =====================
 subgraph Core ["Core Assistant Engine"]
-    LLM[Qwen 4B via LM Studio<br/>Tool Calling + Vision]
-    TOOLS[Tool Execution Layer<br/>System + APIs + Robotics]
+    LLM[Qwen 4B via LM Studio<br/>Vision + Tool Calling]
+    TOOLS[Tool Execution Layer<br/>System • APIs • Robotics]
     LOGGER[JSON Conversation Logger]
+    TTS[TTS Output<br/>Piper or Edge TTS]
 end
+
 
 %% =====================
 %% MEMORY SYSTEM
 %% =====================
 subgraph Memory ["Long-Term Memory System"]
-    JUDGE[Background Judge Model<br/>Async Decision]
-    SAVE[save_memory Tool<br/>Dedup + Update + Consolidation]
+    JUDGE[Background Judge Model<br/>Async Memory Decisions]
+    SAVE[save_memory Tool<br/>Dedup • Update • Consolidation]
     RETRIEVE[retrieve_memory Tool<br/>Semantic Recall]
 end
+
 
 %% =====================
 %% STORAGE
@@ -248,6 +345,7 @@ subgraph Storage ["Knowledge Storage"]
     CHROMA[ChromaDB Persistent Store]
 end
 
+
 %% =====================
 %% ROBOTICS
 %% =====================
@@ -256,40 +354,37 @@ subgraph Robotics ["Physical Embodiment"]
     QUAD[Quadruped Robot]
 end
 
-%% =====================
-%% API SERVER
-%% =====================
-subgraph BackendAPI ["Backend API Layer"]
-    FASTAPI[FastAPI Server]
-end
 
+%% ========= CONNECTIONS =========
 
-%% === CONNECTIONS ===
+%% UI Routing
+NEXTUI --> NEXTAPI
+MICUI --> NEXTAPI
+NEXTUI --> VISUALS
 
-%% INPUT PATHS
-MIC --> CLI --> LLM
-STREAMLIT --> FASTAPI --> LLM
+%% API Proxy Layer
+NEXTAPI --> FASTAPI
 
-%% CORE ACTION
+%% Backend Core Flow
+FASTAPI --> LLM
 LLM --> TOOLS
 LLM --> LOGGER
-LLM --> EDGE
+LLM --> TTS
 
-%% ROBOTICS
+%% Robotics
 TOOLS --> ARM
 TOOLS --> QUAD
 
-%% MEMORY WRITE PIPELINE
+%% Memory Write
 LLM --> JUDGE --> SAVE --> EMBED --> CHROMA
 
-%% MEMORY RETRIEVAL PIPELINE
+%% Memory Retrieval
 LLM --> RETRIEVE
 RETRIEVE --> EMBED --> CHROMA --> RETRIEVE --> LLM
 
-%% PERIODIC RAG INJECTION
+%% Periodic RAG
 CHROMA --> LLM
 ```
-
 # 🛡️ Design Principles
 
 * 🧠 **Cognitive realism** → AI that remembers *meaningfully*
@@ -339,12 +434,20 @@ ATOM is designed to be practical on consumer hardware.
 
 # 📦 Installation
 
+Base Install
 ```bash
 git clone https://github.com/AtifUsmani/A.T.O.M
 cd A.T.O.M
 conda create -n atom python=3.13
 conda activate atom
 pip install -r requirements.txt
+```
+
+Web UI Install
+```bash
+git clone https://github.com/AtifUsmani/ATOM-UI
+cd ATOM-UI
+npm install
 ```
 
 <!-- Download [Vosk](https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip) and extract it inside the [stt](./stt/) directory. -->
@@ -365,8 +468,7 @@ python atom.py
 Web/API Mode:
 
 ```bash
-uvicorn api.server:app --reload
-streamlit run frontend/main.py
+uvicorn api.server:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Run `embedding_server.py` before ATOM.
@@ -381,7 +483,11 @@ python embedding/embedding_server.py
 
 # 🎥 Demo
 
-👉 [December Demo](https://youtu.be/EiwELGI6O9g)
+👉 [January Demo](https://youtu.be/rNdASscA49w)
+
+👉 [UI Demo](https://youtu.be/uSW0KieiHQs)
+
+ATOM is an actively evolving research system. Some components may be experimental or slower depending on hardware constraints, but the core architecture and capabilities are stable.
 
 ---
 
@@ -394,7 +500,7 @@ python embedding/embedding_server.py
 | Model      | [Qwen3-VL-4B](https://lmstudio.ai/models/qwen3-vl)                   |
 | Memory     | [ChromaDB](https://www.trychroma.com/)                      |
 | Embeddings | [Custom local embedding server](./embedding/embedding_server.py) |
-| UI         | [Streamlit](https://streamlit.io/)                     |
+| UI         | [React](https://react.dev/) and [Next.js](https://nextjs.org/)                     |
 | API        | [FastAPI](https://fastapi.tiangolo.com/)                       |
 | Web Search        | [SearXNG](https://github.com/searxng/searxng) / [DuckDuckGo](https://duckduckgo.com/)                       |
 | Robotics   | [Python control layer](./robots/)          |
